@@ -3,20 +3,23 @@ import axios from 'axios';
 import useAuth from '../hooks/useAuth';
 import { Plus, Search, Calendar, DollarSign, User } from 'lucide-react';
 import CreateSaleModal from '../components/CreateSaleModal';
+import ViewSaleModal from '../components/ViewSaleModal';
 
 const Sales = () => {
     const { user } = useAuth();
     const [sales, setSales] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedSale, setSelectedSale] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const config = { headers: { Authorization: `Bearer ${user?.token}` } };
+
+    // ... (fetchSales function remains same)
 
     const fetchSales = async () => {
         try {
             setLoading(true);
             const { data } = await axios.get('http://localhost:5000/api/sales', config);
-            // Sort by date descending
             setSales(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         } catch (error) {
             console.error(error);
@@ -68,7 +71,11 @@ const Sales = () => {
                                 </tr>
                             ) : (
                                 sales.map(sale => (
-                                    <tr key={sale._id} className="hover:bg-gray-50 transition">
+                                    <tr
+                                        key={sale._id}
+                                        className="hover:bg-gray-50 transition cursor-pointer"
+                                        onClick={() => setSelectedSale(sale)}
+                                    >
                                         <td className="py-4 px-6 font-medium text-gray-800">{sale.invoiceNumber}</td>
                                         <td className="py-4 px-6 text-gray-600">
                                             <div className="flex items-center">
@@ -101,6 +108,13 @@ const Sales = () => {
                 <CreateSaleModal
                     onClose={() => setIsModalOpen(false)}
                     onSuccess={fetchSales}
+                />
+            )}
+
+            {selectedSale && (
+                <ViewSaleModal
+                    sale={selectedSale}
+                    onClose={() => setSelectedSale(null)}
                 />
             )}
         </div>
