@@ -22,7 +22,7 @@ const Medicines = () => {
     const config = { headers: { Authorization: `Bearer ${user?.token}` } };
 
     useEffect(() => {
-        fetchMedicines();
+        if (user?.token && medicines.length === 0) fetchMedicines();
     }, [user]);
 
     const fetchMedicines = async () => {

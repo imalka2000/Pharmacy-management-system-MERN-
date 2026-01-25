@@ -1,1 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@layer base {
+    body {
+        font-family: 'Inter', sans-serif;
+        @apply bg-slate-50 text-slate-800 antialiased;
+    }
+}
+
+@layer utilities {
+    .glass {
+        @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg;
+    }
+
+    .card-gradient-1 {
+        @apply bg-gradient-to-br from-blue-500 to-blue-600;
+    }
+
+    .card-gradient-2 {
+        @apply bg-gradient-to-br from-emerald-500 to-emerald-600;
+    }
+
+    .card-gradient-3 {
+        @apply bg-gradient-to-br from-orange-500 to-orange-600;
+    }
+
+    .card-gradient-4 {
+        @apply bg-gradient-to-br from-rose-500 to-rose-600;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+}

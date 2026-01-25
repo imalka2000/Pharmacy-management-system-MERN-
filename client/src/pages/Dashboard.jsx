@@ -18,8 +18,10 @@ const Dashboard = () => {
                 console.error(error);
             }
         };
-        if (user?.token) fetchStats();
-    }, [user]);
+        // Only fetch if we have a user and stats haven't been loaded yet (or add a refresh button manual trigger)
+        // To strictly stop loop if 'user' object reference is changing constantly:
+        if (user?.token && !stats) fetchStats();
+    }, [user, stats]);
 
     if (!stats) return <div>Loading...</div>;
 
@@ -30,38 +32,96 @@ const Dashboard = () => {
     ];
 
     return (
-        <div>
-            <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+        <div className="max-w-7xl mx-auto">
+            <h1 className="text-3xl font-extrabold mb-8 text-slate-800 tracking-tight">Dashboard Overview</h1>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white p-6 rounded shadow-md border-l-4 border-blue-500">
-                    <h3 className="text-gray-500">Total Revenue</h3>
-                    <p className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {/* Revenue Card */}
+                <div className="relative overflow-hidden rounded-2xl shadow-lg border border-blue-100 group hover:shadow-xl transition-all duration-300 bg-white">
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-500 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
+                    <div className="p-6 relative z-10">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-sm font-semibold text-blue-500 uppercase tracking-wider mb-1">Total Revenue</p>
+                                <h3 className="text-3xl font-bold text-slate-800">${stats.totalRevenue.toFixed(2)}</h3>
+                            </div>
+                            <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="bg-white p-6 rounded shadow-md border-l-4 border-green-500">
-                    <h3 className="text-gray-500">Total Sales</h3>
-                    <p className="text-2xl font-bold">{stats.totalSales}</p>
+
+                {/* Sales Card */}
+                <div className="relative overflow-hidden rounded-2xl shadow-lg border border-emerald-100 group hover:shadow-xl transition-all duration-300 bg-white">
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-emerald-500 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
+                    <div className="p-6 relative z-10">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-sm font-semibold text-emerald-500 uppercase tracking-wider mb-1">Total Sales</p>
+                                <h3 className="text-3xl font-bold text-slate-800">{stats.totalSales}</h3>
+                            </div>
+                            <div className="p-3 bg-emerald-50 rounded-lg text-emerald-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="bg-white p-6 rounded shadow-md border-l-4 border-orange-500">
-                    <h3 className="text-gray-500">Low Stock Items</h3>
-                    <p className="text-2xl font-bold">{stats.lowStock}</p>
+
+                {/* Low Stock */}
+                <div className="relative overflow-hidden rounded-2xl shadow-lg border border-orange-100 group hover:shadow-xl transition-all duration-300 bg-white">
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-orange-500 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
+                    <div className="p-6 relative z-10">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-1">Low Stock</p>
+                                <h3 className="text-3xl font-bold text-slate-800">{stats.lowStock}</h3>
+                            </div>
+                            <div className="p-3 bg-orange-50 rounded-lg text-orange-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="bg-white p-6 rounded shadow-md border-l-4 border-red-500">
-                    <h3 className="text-gray-500">Out of Stock</h3>
-                    <p className="text-2xl font-bold">{stats.outOfStock}</p>
+
+                {/* Out of Stock */}
+                <div className="relative overflow-hidden rounded-2xl shadow-lg border border-rose-100 group hover:shadow-xl transition-all duration-300 bg-white">
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-rose-500 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
+                    <div className="p-6 relative z-10">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-sm font-semibold text-rose-500 uppercase tracking-wider mb-1">Out of Stock</p>
+                                <h3 className="text-3xl font-bold text-slate-800">{stats.outOfStock}</h3>
+                            </div>
+                            <div className="p-3 bg-rose-50 rounded-lg text-rose-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="bg-white p-6 rounded shadow-md h-96">
-                <h3 className="text-xl font-bold mb-4">Overview</h3>
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 h-96">
+                <h3 className="text-xl font-bold mb-6 text-slate-800 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-indigo-500"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
+                    Statistics Overview
+                </h3>
+                <ResponsiveContainer width="100%" height="100%" className="-ml-4">
                     <BarChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="count" fill="#0f766e" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                        <Tooltip
+                            cursor={{ fill: '#f1f5f9' }}
+                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', padding: '12px' }}
+                        />
+                        <Bar dataKey="count" fill="url(#colorGradient)" radius={[6, 6, 0, 0]} barSize={50} />
+                        <defs>
+                            <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#6366f1" stopOpacity={1} />
+                                <stop offset="100%" stopColor="#4338ca" stopOpacity={0.8} />
+                            </linearGradient>
+                        </defs>
                     </BarChart>
                 </ResponsiveContainer>
             </div>

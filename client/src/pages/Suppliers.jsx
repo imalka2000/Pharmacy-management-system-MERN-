@@ -13,7 +13,7 @@ const Suppliers = () => {
     const config = { headers: { Authorization: `Bearer ${user?.token}` } };
 
     useEffect(() => {
-        fetchSuppliers();
+        if (user?.token && suppliers.length === 0) fetchSuppliers();
     }, [user]);
 
     const fetchSuppliers = async () => {

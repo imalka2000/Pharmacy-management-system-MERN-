@@ -17,8 +17,9 @@ const Sales = () => {
     // ... (fetchSales function remains same)
 
     const fetchSales = async () => {
+        if (!user?.token) return;
         try {
-            setLoading(true);
+            // setLoading(true); // Removing this might avoid 'loading' flicker loops if effect depends on it (it doesn't here but safe practice)
             const { data } = await axios.get('http://localhost:5000/api/sales', config);
             setSales(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         } catch (error) {
@@ -29,7 +30,7 @@ const Sales = () => {
     };
 
     useEffect(() => {
-        fetchSales();
+        if (user?.token && sales.length === 0) fetchSales(); // Only fetch if empty to stop loops, manually refresh on new sale
     }, [user]);
 
     return (
