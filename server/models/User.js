@@ -4,7 +4,14 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['admin', 'pharmacist'], default: 'pharmacist' },
+    role: { type: String, enum: ['admin', 'pharmacist', 'driver', 'user'], default: 'user' },
+    fullName: { type: String },
+    email: { type: String, unique: true, sparse: true }, // sparse allows null/undefined to not clash uniqueness
+    phone: { type: String },
+    address: { type: String },
+    salary: { type: Number, default: 0 }, // For employees
+    leaves: [{ type: Object }], // For employees
+    paymentMethods: [{ type: Object }], // For customers
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {
