@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Pill, Users, ShoppingCart, BarChart3, LogOut } from 'lucide-react';
+import { LayoutDashboard, Pill, Users, ShoppingCart, BarChart3, LogOut, FileText } from 'lucide-react';
 import useAuth from '../hooks/useAuth';
 
 const Sidebar = () => {
@@ -10,6 +10,7 @@ const Sidebar = () => {
         { title: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
         { title: 'Medicine', path: '/medicines', icon: <Pill size={20} /> },
         { title: 'Sales', path: '/sales', icon: <ShoppingCart size={20} /> },
+        { title: 'Prescriptions', path: '/prescriptions', icon: <FileText size={20} /> },
         { title: 'Suppliers', path: '/suppliers', icon: <Users size={20} />, role: 'admin' },
         { title: 'Employees', path: '/employees', icon: <Users size={20} />, role: 'admin' },
         { title: 'Users', path: '/users', icon: <Users size={20} />, role: 'admin' },
