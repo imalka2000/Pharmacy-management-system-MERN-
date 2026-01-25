@@ -16,7 +16,7 @@ const getMedicines = async (req, res) => {
 // @route   POST /api/medicines
 // @access  Private/Pharmacist/Admin
 const addMedicine = async (req, res) => {
-    const { name, batchNumber, expiryDate, price, quantity, manufacturer, supplier } = req.body;
+    const { name, batchNumber, expiryDate, price, quantity, manufacturer, supplier, imageUrl } = req.body;
 
     try {
         const medicine = new Medicine({
@@ -26,7 +26,8 @@ const addMedicine = async (req, res) => {
             price,
             quantity,
             manufacturer,
-            supplier
+            supplier,
+            imageUrl
         });
 
         const createdMedicine = await medicine.save();
@@ -40,7 +41,7 @@ const addMedicine = async (req, res) => {
 // @route   PUT /api/medicines/:id
 // @access  Private/Pharmacist/Admin
 const updateMedicine = async (req, res) => {
-    const { name, batchNumber, expiryDate, price, quantity, manufacturer, supplier } = req.body;
+    const { name, batchNumber, expiryDate, price, quantity, manufacturer, supplier, imageUrl } = req.body;
 
     const medicine = await Medicine.findById(req.params.id);
 
@@ -52,6 +53,7 @@ const updateMedicine = async (req, res) => {
         medicine.quantity = quantity || medicine.quantity;
         medicine.manufacturer = manufacturer || medicine.manufacturer;
         medicine.supplier = supplier || medicine.supplier;
+        medicine.imageUrl = imageUrl || medicine.imageUrl;
 
         const updatedMedicine = await medicine.save();
         res.json(updatedMedicine);

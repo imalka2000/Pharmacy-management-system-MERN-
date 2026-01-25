@@ -1,36 +1,17 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Trash, Printer, Search, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import useAuth from '../hooks/useAuth';
 
 const CreateSaleModal = ({ onClose, onSuccess }) => {
-    const { user } = useAuth();
-    const [medicines, setMedicines] = useState([]);
-    const [cart, setCart] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedMed, setSelectedMed] = useState('');
-    const [qty, setQty] = useState(1);
-
-    const config = { headers: { Authorization: `Bearer ${user?.token}` } };
-
-    useEffect(() => {
-        const fetchMedicines = async () => {
-            try {
-                const { data } = await axios.get('http://localhost:5000/api/medicines', config);
-                setMedicines(data);
-            } catch (error) {
-                console.error(error);
-            }
-        };
-        fetchMedicines();
-    }, [user]);
-
+    // ...
     const addToCart = () => {
         if (!selectedMed) return;
         const med = medicines.find(m => m._id === selectedMed);
 
         if (med.quantity < qty) {
-            alert('Insufficient Stock');
+            toast.error('Insufficient Stock');
             return;
         }
 
@@ -38,7 +19,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
         if (existingItem) {
             const newQty = existingItem.quantity + parseInt(qty);
             if (med.quantity < newQty) {
-                alert('Insufficient Stock for total quantity');
+                toast.error('Insufficient Stock for total quantity');
                 return;
             }
             setCart(cart.map(item => item.medicine === med._id ? { ...item, quantity: newQty, subtotal: newQty * med.price } : item));
@@ -54,23 +35,25 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
         setSelectedMed('');
         setQty(1);
         setSearchTerm('');
+        toast.success('Item added to cart');
     };
 
     const removeFromCart = (id) => {
         setCart(cart.filter(item => item.medicine !== id));
+        toast.success('Item removed');
     };
 
     const handleCheckout = async () => {
         if (cart.length === 0) return;
         try {
             await axios.post('http://localhost:5000/api/sales', { items: cart, tax: 0, discount: 0 }, config);
-            alert('Sale Successful');
+            toast.success('Sale Successful');
             setCart([]);
             onSuccess();
             onClose();
         } catch (error) {
             console.error(error);
-            alert('Sale Failed');
+            toast.error('Sale Failed');
         }
     };
 

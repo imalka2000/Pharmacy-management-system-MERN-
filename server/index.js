@@ -15,11 +15,16 @@ app.use(cors());
 app.use(morgan('dev'));
 
 // Routes
+const path = require('path'); // Add path module
+
+// ...
+
 const authRoutes = require('./routes/authRoutes');
 const medicineRoutes = require('./routes/medicineRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const salesRoutes = require('./routes/salesRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const uploadRoutes = require('./routes/uploadRoutes'); // Import uploadRoutes
 const { seedAdmin } = require('./controllers/authController');
 
 app.use('/api/auth', authRoutes);
@@ -27,6 +32,11 @@ app.use('/api/medicines', medicineRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/upload', uploadRoutes); // Mount uploadRoutes
+
+const dirname = path.resolve();
+app.use('/uploads', express.static(path.join(dirname, '/uploads'))); // Make uploads folder static
+
 
 app.get('/', (req, res) => {
     res.send('Pharmacy Management System API is running...');

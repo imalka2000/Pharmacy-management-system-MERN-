@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import useAuth from '../hooks/useAuth';
 
 const AddSupplierModal = ({ onClose, onSuccess }) => {
@@ -12,11 +13,12 @@ const AddSupplierModal = ({ onClose, onSuccess }) => {
         e.preventDefault();
         try {
             await axios.post('http://localhost:5000/api/suppliers', formData, config);
+            toast.success('Supplier added successfully');
             onSuccess();
             onClose();
         } catch (e) {
             console.error(e);
-            alert('Error adding supplier');
+            toast.error('Error adding supplier');
         }
     };
 

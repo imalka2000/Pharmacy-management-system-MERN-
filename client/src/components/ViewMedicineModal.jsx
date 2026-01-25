@@ -14,6 +14,12 @@ const ViewMedicineModal = ({ medicine, onClose }) => {
                 </div>
 
                 <div className="p-6 space-y-4">
+                    {medicine.imageUrl && (
+                        <div className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden border mb-4">
+                            <img src={`http://localhost:5000${medicine.imageUrl}`} alt={medicine.name} className="w-full h-full object-contain" />
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between border-b pb-2">
                         <span className="text-gray-500 font-medium">Batch Number</span>
                         <span className="text-gray-800 font-semibold">{medicine.batchNumber}</span>
