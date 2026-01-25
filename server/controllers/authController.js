@@ -41,4 +41,75 @@ const seedAdmin = async () => {
     }
 };
 
-module.exports = { loginUser, seedAdmin };
+const registerUser = async (req, res) => {
+    const { username, password, role, fullName, email, phone, address, salary } = req.body;
+
+    try {
+        const userExists = await User.findOne({ username });
+
+        if (userExists) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        const user = await User.create({
+            username,
+            password,
+            role,
+            fullName,
+            email,
+            phone,
+            address,
+            salary
+        });
+
+        if (user) {
+            res.status(201).json({
+                _id: user._id,
+                username: user.username,
+                role: user.role,
+                token: generateToken(user._id),
+            });
+        } else {
+            res.status(400).json({ message: 'Invalid user data' });
+        }
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const getUsers = async (req, res) => {
+    try {
+        const users = await User.find({});
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+const updateUserProfile = async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+        user.username = req.body.username || user.username;
+        if (req.body.password) {
+            user.password = req.body.password;
+        }
+        user.fullName = req.body.fullName || user.fullName;
+        user.email = req.body.email || user.email;
+        user.phone = req.body.phone || user.phone;
+        user.address = req.body.address || user.address;
+
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            username: updatedUser.username,
+            role: updatedUser.role,
+            token: generateToken(updatedUser._id),
+        });
+    } else {
+        res.status(404).json({ message: 'User not found' });
+    }
+};
+
+module.exports = { loginUser, registerUser, getUsers, updateUserProfile, seedAdmin };

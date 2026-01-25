@@ -11,6 +11,8 @@ const Sidebar = () => {
         { title: 'Medicine', path: '/medicines', icon: <Pill size={20} /> },
         { title: 'Sales', path: '/sales', icon: <ShoppingCart size={20} /> },
         { title: 'Suppliers', path: '/suppliers', icon: <Users size={20} />, role: 'admin' },
+        { title: 'Employees', path: '/employees', icon: <Users size={20} />, role: 'admin' },
+        { title: 'Users', path: '/users', icon: <Users size={20} />, role: 'admin' },
         { title: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, role: 'admin' },
     ];
 
@@ -36,8 +38,8 @@ const Sidebar = () => {
                             key={link.path}
                             to={link.path}
                             className={`flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 group ${isActive
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 translate-x-1'
-                                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-white hover:translate-x-1'
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 translate-x-1'
+                                : 'text-slate-400 hover:bg-slate-800/50 hover:text-white hover:translate-x-1'
                                 }`}
                         >
                             <span className={`mr-3 transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`}>
