@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Medicines from './pages/Medicines';
 import Sales from './pages/Sales';
+import Prescriptions from './pages/Prescriptions';
 import Suppliers from './pages/Suppliers';
 import Reports from './pages/Reports';
 import Users from './pages/Users';
@@ -29,6 +30,7 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="medicines" element={<Medicines />} />
         <Route path="sales" element={<Sales />} />
+        <Route path="prescriptions" element={<Prescriptions />} />
         <Route path="suppliers" element={<Suppliers />} />
         <Route path="users" element={<Users />} />
         <Route path="employees" element={<Employees />} />
