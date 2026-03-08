@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Pill, Users, ShoppingCart, BarChart3, LogOut, FileText, Truck } from 'lucide-react';
+import { LayoutDashboard, Pill, Users, ShoppingCart, BarChart3, LogOut, FileText, Truck, Tag, MessageSquare } from 'lucide-react';
 import useAuth from '../hooks/useAuth';
 
 const Sidebar = () => {
@@ -17,6 +17,8 @@ const Sidebar = () => {
         { title: 'Suppliers', path: '/suppliers', icon: <Users size={20} />, role: 'admin' },
         { title: 'Employees', path: '/employees', icon: <Users size={20} />, role: 'admin' },
         { title: 'Users', path: '/users', icon: <Users size={20} />, role: 'admin' },
+        { title: 'Promotions', path: '/promotions', icon: <Tag size={20} /> },
+        { title: 'Feedback', path: '/feedback', icon: <MessageSquare size={20} /> },
         { title: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, role: 'admin' },
     ];
 

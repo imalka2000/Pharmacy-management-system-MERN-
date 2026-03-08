@@ -26,8 +26,10 @@ const salesRoutes = require('./routes/salesRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoutes');
-const supplyRequestRoutes = require('./routes/supplyRequestRoutes'); // Import supply requests
-const deliveryRoutes = require('./routes/deliveryRoutes'); // Import delivery routes
+const supplyRequestRoutes = require('./routes/supplyRequestRoutes');
+const deliveryRoutes = require('./routes/deliveryRoutes');
+const promotionRoutes = require('./routes/promotionRoutes'); // Promotions
+const feedbackRoutes = require('./routes/feedbackRoutes'); // Feedback
 const { seedAdmin } = require('./controllers/authController');
 
 app.use('/api/auth', authRoutes);
@@ -37,8 +39,10 @@ app.use('/api/sales', salesRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
-app.use('/api/supply-requests', supplyRequestRoutes); // Mount supply requests
-app.use('/api/deliveries', deliveryRoutes); // Mount deliveries
+app.use('/api/supply-requests', supplyRequestRoutes);
+app.use('/api/deliveries', deliveryRoutes);
+app.use('/api/promotions', promotionRoutes); // Mount promotions
+app.use('/api/feedback', feedbackRoutes); // Mount feedback
 
 const dirname = path.resolve();
 app.use('/uploads', express.static(path.join(dirname, '/uploads'))); // Make uploads folder static

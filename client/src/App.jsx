@@ -8,6 +8,8 @@ import Prescriptions from './pages/Prescriptions';
 import SupplyChain from './pages/SupplyChain';
 import Deliveries from './pages/Deliveries';
 import DriverPortal from './pages/DriverPortal';
+import Promotions from './pages/Promotions';
+import Feedback from './pages/Feedback';
 import Suppliers from './pages/Suppliers';
 import Reports from './pages/Reports';
 import Users from './pages/Users';
@@ -37,6 +39,8 @@ function App() {
         <Route path="supply-chain" element={<SupplyChain />} />
         <Route path="deliveries" element={<Deliveries />} />
         <Route path="driver-portal" element={<DriverPortal />} />
+        <Route path="promotions" element={<Promotions />} />
+        <Route path="feedback" element={<Feedback />} />
         <Route path="suppliers" element={<Suppliers />} />
         <Route path="users" element={<Users />} />
         <Route path="employees" element={<Employees />} />
