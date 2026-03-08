@@ -25,7 +25,9 @@ const supplierRoutes = require('./routes/supplierRoutes');
 const salesRoutes = require('./routes/salesRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
-const prescriptionRoutes = require('./routes/prescriptionRoutes'); // Import
+const prescriptionRoutes = require('./routes/prescriptionRoutes');
+const supplyRequestRoutes = require('./routes/supplyRequestRoutes'); // Import supply requests
+const deliveryRoutes = require('./routes/deliveryRoutes'); // Import delivery routes
 const { seedAdmin } = require('./controllers/authController');
 
 app.use('/api/auth', authRoutes);
@@ -34,7 +36,9 @@ app.use('/api/suppliers', supplierRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/prescriptions', prescriptionRoutes); // Mount
+app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/supply-requests', supplyRequestRoutes); // Mount supply requests
+app.use('/api/deliveries', deliveryRoutes); // Mount deliveries
 
 const dirname = path.resolve();
 app.use('/uploads', express.static(path.join(dirname, '/uploads'))); // Make uploads folder static

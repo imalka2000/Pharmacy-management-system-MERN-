@@ -5,6 +5,9 @@ import Dashboard from './pages/Dashboard';
 import Medicines from './pages/Medicines';
 import Sales from './pages/Sales';
 import Prescriptions from './pages/Prescriptions';
+import SupplyChain from './pages/SupplyChain';
+import Deliveries from './pages/Deliveries';
+import DriverPortal from './pages/DriverPortal';
 import Suppliers from './pages/Suppliers';
 import Reports from './pages/Reports';
 import Users from './pages/Users';
@@ -31,6 +34,9 @@ function App() {
         <Route path="medicines" element={<Medicines />} />
         <Route path="sales" element={<Sales />} />
         <Route path="prescriptions" element={<Prescriptions />} />
+        <Route path="supply-chain" element={<SupplyChain />} />
+        <Route path="deliveries" element={<Deliveries />} />
+        <Route path="driver-portal" element={<DriverPortal />} />
         <Route path="suppliers" element={<Suppliers />} />
         <Route path="users" element={<Users />} />
         <Route path="employees" element={<Employees />} />
