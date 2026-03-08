@@ -51,6 +51,7 @@ app.get('/', (req, res) => {
 // Database Connection
 const connectDB = async () => {
     try {
+        require('dns').setServers(['8.8.8.8']); // Use Google DNS to bypass local network DNS blocking of MongoDB Atlas SRV records
         await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/pharmacy_db');
         console.log('MongoDB Connected (Primary)');
         await seedAdmin();
