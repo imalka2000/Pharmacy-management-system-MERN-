@@ -1,107 +1,136 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../api-request/config';
 import useAuth from '../hooks/useAuth';
-import { Plus, Trash, Eye, Phone, Mail, MapPin } from 'lucide-react';
+import { Button, Table, Card, Row, Col, Spinner } from 'react-bootstrap';
 import AddSupplierModal from '../components/AddSupplierModal';
 import ViewSupplierModal from '../components/ViewSupplierModal';
+import toast from 'react-hot-toast';
 
 const Suppliers = () => {
     const { user } = useAuth();
     const [suppliers, setSuppliers] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState(null);
-    const config = { headers: { Authorization: `Bearer ${user?.token}` } };
 
     useEffect(() => {
-        if (user?.token && suppliers.length === 0) fetchSuppliers();
+        if (user?.token) fetchSuppliers();
     }, [user]);
 
     const fetchSuppliers = async () => {
+        setLoading(true);
         try {
-            const { data } = await axios.get('http://localhost:5001/api/suppliers', config);
+            const { data } = await apiClient.get('/suppliers');
             setSuppliers(data);
-        } catch (e) { console.error(e); }
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to fetch suppliers');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDelete = async (e, id) => {
-        e.stopPropagation(); // Prevent row click
-        if (window.confirm('Delete Supplier?')) {
+        e.stopPropagation();
+        if (window.confirm('Are you sure you want to delete this supplier?')) {
             try {
-                await axios.delete(`http://localhost:5001/api/suppliers/${id}`, config);
+                await apiClient.delete(`/suppliers/${id}`);
+                toast.success('Supplier removed successfully');
                 fetchSuppliers();
-            } catch (e) { console.error(e); }
+            } catch (error) {
+                toast.error('Failed to remove supplier');
+            }
         }
     };
 
     return (
-        <div className="p-6 h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6">
+        <div className="container-fluid px-0">
+            <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Suppliers</h1>
-                    <p className="text-gray-500">Manage your medicine suppliers</p>
+                    <h2 className="fw-bold text-dark m-0">Suppliers</h2>
+                    <p className="text-muted small m-0">Manage your medicine supply partners</p>
                 </div>
-                <button
+                <Button
+                    variant="primary"
+                    className="shadow-sm rounded-3 d-flex align-items-center px-4 py-2"
                     onClick={() => setIsAddModalOpen(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center transition shadow-sm"
                 >
-                    <Plus size={20} className="mr-2" />
-                    Add Supplier
-                </button>
+                    <i className="bi bi-person-plus-fill me-2"></i> Add Supplier
+                </Button>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 overflow-hidden flex flex-col">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+            {loading ? (
+                <div className="text-center py-5">
+                    <Spinner animation="border" variant="primary" />
+                    <p className="mt-2 text-muted">Loading suppliers...</p>
+                </div>
+            ) : suppliers.length === 0 ? (
+                <div className="text-center py-5 bg-white rounded-4 shadow-sm border">
+                    <i className="bi bi-people fs-1 text-muted opacity-25"></i>
+                    <p className="mt-3 text-muted">No suppliers found.</p>
+                </div>
+            ) : (
+                <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
+                    <Table hover responsive className="mb-0">
+                        <thead className="bg-light">
                             <tr>
-                                <th className="py-4 px-6 font-semibold text-gray-600 text-sm uppercase">Supplier Name</th>
-                                <th className="py-4 px-6 font-semibold text-gray-600 text-sm uppercase">Contact</th>
-                                <th className="py-4 px-6 font-semibold text-gray-600 text-sm uppercase">Email</th>
-                                <th className="py-4 px-6 font-semibold text-gray-600 text-sm uppercase">Address</th>
-                                <th className="py-4 px-6 font-semibold text-gray-600 text-sm uppercase text-right">Actions</th>
+                                <th className="ps-4 py-3 text-muted small fw-bold text-uppercase">Supplier Name</th>
+                                <th className="py-3 text-muted small fw-bold text-uppercase">Contact Number</th>
+                                <th className="py-3 text-muted small fw-bold text-uppercase">Email Address</th>
+                                <th className="py-3 text-muted small fw-bold text-uppercase">Address</th>
+                                <th className="pe-4 py-3 text-end text-muted small fw-bold text-uppercase">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {suppliers.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" className="text-center py-8 text-gray-500">No suppliers found.</td>
+                        <tbody>
+                            {suppliers.map(sup => (
+                                <tr
+                                    key={sup._id}
+                                    className="align-middle"
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={() => setSelectedSupplier(sup)}
+                                >
+                                    <td className="ps-4">
+                                        <div className="d-flex align-items-center">
+                                            <div className="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                                                <i className="bi bi-building fs-5"></i>
+                                            </div>
+                                            <span className="fw-bold text-dark">{sup.name}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="text-muted d-flex align-items-center">
+                                            <i className="bi bi-telephone text-primary opacity-50 me-2"></i>
+                                            {sup.contactNumber}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="text-muted d-flex align-items-center">
+                                            <i className="bi bi-envelope text-primary opacity-50 me-2"></i>
+                                            {sup.email || <span className="text-muted opacity-50">N/A</span>}
+                                        </div>
+                                    </td>
+                                    <td className="text-muted">
+                                        <div className="text-truncate" style={{ maxWidth: '250px' }}>
+                                            <i className="bi bi-geo-alt text-primary opacity-50 me-2"></i>
+                                            {sup.address || <span className="text-muted opacity-50">N/A</span>}
+                                        </div>
+                                    </td>
+                                    <td className="pe-4 text-end">
+                                        <Button
+                                            variant="light"
+                                            size="sm"
+                                            className="text-danger rounded-circle p-2"
+                                            onClick={(e) => handleDelete(e, sup._id)}
+                                        >
+                                            <i className="bi bi-trash"></i>
+                                        </Button>
+                                    </td>
                                 </tr>
-                            ) : (
-                                suppliers.map(sup => (
-                                    <tr
-                                        key={sup._id}
-                                        className="hover:bg-gray-50 transition cursor-pointer"
-                                        onClick={() => setSelectedSupplier(sup)}
-                                    >
-                                        <td className="py-4 px-6 font-medium text-gray-800">{sup.name}</td>
-                                        <td className="py-4 px-6 text-gray-600">
-                                            <div className="flex items-center">
-                                                <Phone size={16} className="mr-2 text-gray-400" />
-                                                {sup.contactNumber}
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-6 text-gray-600">
-                                            <div className="flex items-center">
-                                                <Mail size={16} className="mr-2 text-gray-400" />
-                                                {sup.email || '-'}
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-6 text-gray-600 truncate max-w-xs">{sup.address || '-'}</td>
-                                        <td className="py-4 px-6 text-right">
-                                            <button
-                                                onClick={(e) => handleDelete(e, sup._id)}
-                                                className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-full transition"
-                                            >
-                                                <Trash size={18} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
+                            ))}
                         </tbody>
-                    </table>
-                </div>
-            </div>
+                    </Table>
+                </Card>
+            )}
 
             {isAddModalOpen && (
                 <AddSupplierModal

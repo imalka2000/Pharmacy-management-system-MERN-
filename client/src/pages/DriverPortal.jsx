@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../api-request/config';
 import useAuth from '../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { Truck, MapPin, CheckCircle, Clock } from 'lucide-react';
+import { Container, Row, Col, Card, Button, Badge, Spinner } from 'react-bootstrap';
 
 const DriverPortal = () => {
     const { user } = useAuth();
     const [deliveries, setDeliveries] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    const config = { headers: { Authorization: `Bearer ${user?.token}` } };
 
     useEffect(() => {
         if (user?.token) fetchDeliveries();
@@ -17,20 +15,20 @@ const DriverPortal = () => {
 
     const fetchDeliveries = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5001/api/deliveries/my-deliveries', config);
+            const { data } = await apiClient.get('/deliveries/my-deliveries');
             setDeliveries(data);
-            setLoading(false);
         } catch (error) {
             console.error('Error fetching deliveries:', error);
-            toast.error('Failed to load deliveries');
+            toast.error('Failed to load mission list');
+        } finally {
             setLoading(false);
         }
     };
 
     const updateStatus = async (id, status) => {
         try {
-            await axios.put(`http://localhost:5001/api/deliveries/${id}/status`, { status }, config);
-            toast.success(`Delivery status updated to ${status}`);
+            await apiClient.put(`/deliveries/${id}/status`, { status });
+            toast.success(`Mission status: ${status}`);
             fetchDeliveries();
         } catch (error) {
             toast.error('Failed to update status');
@@ -39,88 +37,111 @@ const DriverPortal = () => {
 
     const getStatusStyle = (status) => {
         switch (status) {
-            case 'Pending': return 'bg-yellow-100 text-yellow-700';
-            case 'Picked Up': return 'bg-purple-100 text-purple-700';
-            case 'In Transit': return 'bg-blue-100 text-blue-700';
-            case 'Delivered': return 'bg-emerald-100 text-emerald-700';
-            case 'Cancelled': return 'bg-rose-100 text-rose-700';
-            default: return 'bg-slate-100 text-slate-600';
+            case 'Pending': return { bg: 'warning-subtle', text: 'warning', icon: 'bi-clock' };
+            case 'Picked Up': return { bg: 'info-subtle', text: 'info', icon: 'bi-box-seam' };
+            case 'In Transit': return { bg: 'primary-subtle', text: 'primary', icon: 'bi-truck' };
+            case 'Delivered': return { bg: 'success-subtle', text: 'success', icon: 'bi-check-circle-fill' };
+            case 'Cancelled': return { bg: 'danger-subtle', text: 'danger', icon: 'bi-x-circle-fill' };
+            default: return { bg: 'light', text: 'secondary', icon: 'bi-question-circle' };
         }
     };
 
     return (
-        <div className="max-w-7xl mx-auto h-full flex flex-col">
-            <div className="mb-6">
-                <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Driver Portal</h1>
-                <p className="text-slate-500 mt-1">Manage your delivery tasks</p>
+        <Container fluid>
+            <div className="mb-4">
+                <h2 className="fw-bold text-dark m-0">Mission Dashboard</h2>
+                <p className="text-muted small m-0">Field agent operational portal</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
+            <Row className="g-4">
                 {loading ? (
-                    <div className="col-span-full py-10 text-center text-slate-400">Loading your deliveries...</div>
+                    <Col xs={12} className="text-center py-5">
+                        <Spinner animation="grow" variant="primary" />
+                        <p className="mt-3 text-muted fw-medium">Syncing dispatch data...</p>
+                    </Col>
                 ) : deliveries.length === 0 ? (
-                    <div className="col-span-full py-10 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-300">
-                        No deliveries assigned to you yet.
-                    </div>
+                    <Col xs={12}>
+                        <Card className="border-0 shadow-sm rounded-4 text-center py-5 bg-light border border-dashed">
+                            <Card.Body>
+                                <i className="bi bi-mailbox2 fs-1 text-muted opacity-25 d-block mb-3"></i>
+                                <h5 className="fw-bold text-muted">No Tasks Assigned</h5>
+                                <p className="text-muted small">You are currently on standby. Check back later for new missions.</p>
+                            </Card.Body>
+                        </Card>
+                    </Col>
                 ) : (
-                    deliveries.map(delivery => (
-                        <div key={delivery._id} className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 flex flex-col hover:shadow-xl transition relative overflow-hidden">
-                            <div className="flex justify-between items-start mb-4 relative z-10">
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusStyle(delivery.status)}`}>
-                                    {delivery.status}
-                                </span>
-                            </div>
+                    deliveries.map(delivery => {
+                        const style = getStatusStyle(delivery.status);
+                        return (
+                            <Col key={delivery._id} xs={12} md={6} lg={4}>
+                                <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden position-relative hover-lift transition">
+                                    <Card.Body className="p-4 d-flex flex-column">
+                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                            <Badge bg={style.bg} text={style.text} className="px-3 py-2 rounded-pill fw-bold border border-white shadow-sm">
+                                                <i className={`bi ${style.icon} me-1`}></i> {delivery.status}
+                                            </Badge>
+                                            <div className="text-muted small fw-bold">ID: {delivery._id.slice(-6).toUpperCase()}</div>
+                                        </div>
 
-                            <div className="mb-4">
-                                <div className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Customer</div>
-                                <div className="font-bold text-slate-800 text-lg">{delivery.customer?.fullName || 'Unknown Customer'}</div>
-                                <div className="text-sm text-slate-500">{delivery.customer?.phone || 'No phone provided'}</div>
-                            </div>
+                                        <div className="mb-4">
+                                            <label className="xxs fw-bold text-muted text-uppercase letter-spacing-1 mb-1 d-block">RECIPIENT</label>
+                                            <h5 className="fw-bold text-dark mb-0">{delivery.customer?.fullName || 'Anonymous Resident'}</h5>
+                                            <p className="text-muted small mb-0 fw-bold">{delivery.customer?.phone || 'Priority Dispatch'}</p>
+                                        </div>
 
-                            <div className="flex items-start gap-3 bg-slate-50 rounded-xl p-4 mb-5 border border-slate-100 flex-1">
-                                <MapPin size={20} className="text-indigo-500 mt-0.5 shrink-0" />
-                                <div>
-                                    <div className="text-slate-400 text-xs font-semibold uppercase">Delivery Address</div>
-                                    <div className="text-slate-700 font-medium text-sm mt-0.5">{delivery.address}</div>
-                                </div>
-                            </div>
+                                        <Card className="bg-light border-0 rounded-4 p-3 mb-4 flex-grow-1 border border-primary border-opacity-10">
+                                            <div className="d-flex">
+                                                <i className="bi bi-geo-alt-fill text-danger me-2 mt-1 fs-5"></i>
+                                                <div>
+                                                    <label className="xxs fw-bold text-muted text-uppercase mb-1 d-block">DELIVERY LOCATION</label>
+                                                    <p className="text-dark fw-bold small mb-0 lh-sm">{delivery.address}</p>
+                                                </div>
+                                            </div>
+                                        </Card>
 
-                            {delivery.notes && (
-                                <div className="text-sm text-slate-600 italic bg-amber-50 p-3 rounded-xl mb-4 border border-amber-100 line-clamp-2">
-                                    "{delivery.notes}"
-                                </div>
-                            )}
+                                        {delivery.notes && (
+                                            <div className="bg-warning bg-opacity-10 rounded-3 p-3 mb-4 border border-warning border-opacity-25">
+                                                <div className="d-flex align-items-center mb-1">
+                                                    <i className="bi bi-info-circle-fill text-warning me-2 small"></i>
+                                                    <span className="xxs fw-bold text-warning text-uppercase">AGENTS NOTES</span>
+                                                </div>
+                                                <p className="text-dark small mb-0 fw-medium italic text-muted">"{delivery.notes}"</p>
+                                            </div>
+                                        )}
 
-                            <div className="mt-auto grid grid-cols-1 gap-2 border-t pt-4 border-slate-100">
-                                {delivery.status === 'Pending' && (
-                                    <button onClick={() => updateStatus(delivery._id, 'Picked Up')} className="bg-purple-100 text-purple-700 hover:bg-purple-200 py-2.5 rounded-xl font-medium transition text-sm">
-                                        Mark Picked Up
-                                    </button>
-                                )}
-                                {delivery.status === 'Picked Up' && (
-                                    <button onClick={() => updateStatus(delivery._id, 'In Transit')} className="bg-blue-100 text-blue-700 hover:bg-blue-200 py-2.5 rounded-xl font-medium transition text-sm flex items-center justify-center gap-2">
-                                        <Truck size={16} /> Mark In Transit
-                                    </button>
-                                )}
-                                {delivery.status === 'In Transit' && (
-                                    <button onClick={() => updateStatus(delivery._id, 'Delivered')} className="bg-emerald-500 text-white hover:bg-emerald-600 py-2.5 rounded-xl font-medium shadow-lg shadow-emerald-500/30 transition text-sm flex items-center justify-center gap-2">
-                                        <CheckCircle size={16} /> Mark Delivered
-                                    </button>
-                                )}
-                                {delivery.status === 'Delivered' && (
-                                    <div className="text-center text-emerald-600 font-semibold py-2 flex justify-center items-center gap-2 text-sm">
-                                        <CheckCircle size={18} /> Delivery Completed
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Decorative background icon */}
-                            <Truck size={120} className="absolute -bottom-6 -right-6 text-slate-50 opacity-50 z-0 pointer-events-none" />
-                        </div>
-                    ))
+                                        <div className="mt-auto pt-3 border-top border-light">
+                                            {delivery.status === 'Pending' && (
+                                                <Button onClick={() => updateStatus(delivery._id, 'Picked Up')} variant="primary" className="w-100 py-3 rounded-4 fw-bold shadow-sm">
+                                                    Initialize Pickup
+                                                </Button>
+                                            )}
+                                            {delivery.status === 'Picked Up' && (
+                                                <Button onClick={() => updateStatus(delivery._id, 'In Transit')} variant="info" className="w-100 py-3 rounded-4 fw-bold text-white shadow-sm">
+                                                    <i className="bi bi-truck me-2"></i> Start Transit
+                                                </Button>
+                                            )}
+                                            {delivery.status === 'In Transit' && (
+                                                <Button onClick={() => updateStatus(delivery._id, 'Delivered')} variant="success" className="w-100 py-3 rounded-4 fw-bold shadow-sm">
+                                                    <i className="bi bi-check-circle-fill me-2"></i> Complete Drop-off
+                                                </Button>
+                                            )}
+                                            {delivery.status === 'Delivered' && (
+                                                <div className="text-center bg-success bg-opacity-10 py-3 rounded-4 border border-success border-opacity-25">
+                                                    <div className="text-success fw-bold small">
+                                                        <i className="bi bi-shield-check me-2"></i> MISSION VERIFIED
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </Card.Body>
+                                    <i className="bi bi-truck position-absolute text-light opacity-25" style={{ fontSize: '100px', bottom: '-20px', right: '-20px', zIndex: 0 }}></i>
+                                </Card>
+                            </Col>
+                        );
+                    })
                 )}
-            </div>
-        </div>
+            </Row>
+        </Container>
     );
 };
 

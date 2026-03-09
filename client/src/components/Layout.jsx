@@ -4,19 +4,36 @@ import Sidebar from './Sidebar';
 
 const Layout = () => {
     return (
-        <div className="flex bg-slate-50 min-h-screen font-sans">
-            <Toaster position="top-right" reverseOrder={false} toastOptions={{
-                className: '',
-                style: {
-                    borderRadius: '10px',
-                    background: '#333',
-                    color: '#fff',
-                },
-            }} />
+        <div className="d-flex bg-light min-h-screen">
+            <Toaster
+                position="top-right"
+                reverseOrder={false}
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        borderRadius: '16px',
+                        background: '#1e293b',
+                        color: '#fff',
+                        padding: '16px 24px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                    },
+                    success: {
+                        iconTheme: {
+                            primary: '#10b981',
+                            secondary: '#fff',
+                        },
+                    },
+                }}
+            />
             <Sidebar />
-            <div className="flex-1 ml-72 p-10 overflow-y-auto h-screen">
-                <Outlet />
-            </div>
+            <main className="flex-grow-1" style={{ marginLeft: '280px', minHeight: '100vh', overflowX: 'hidden' }}>
+                <div className="p-4 p-md-5">
+                    <Outlet />
+                </div>
+            </main>
         </div>
     );
 };

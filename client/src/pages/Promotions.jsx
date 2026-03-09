@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../api-request/config';
 import useAuth from '../hooks/useAuth';
-import { Plus, Tag, Calendar, Trash2, X } from 'lucide-react';
+import { Container, Row, Col, Card, Button, Form, Modal, Spinner, Badge } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 
 const Promotions = () => {
@@ -9,6 +9,7 @@ const Promotions = () => {
     const [promotions, setPromotions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     // Form for new promotion
     const [formData, setFormData] = useState({
@@ -19,187 +20,221 @@ const Promotions = () => {
         endDate: ''
     });
 
-    const config = { headers: { Authorization: `Bearer ${user?.token}` } };
-
     useEffect(() => {
         if (user?.token) fetchPromotions();
     }, [user]);
 
     const fetchPromotions = async () => {
+        setLoading(true);
         try {
-            const { data } = await axios.get('http://localhost:5001/api/promotions', config);
+            const { data } = await apiClient.get('/promotions');
             setPromotions(data);
-            setLoading(false);
         } catch (error) {
-            toast.error('Failed to load promotions');
+            toast.error('Failed to load marketing campaigns');
+        } finally {
             setLoading(false);
         }
     };
 
     const handleCreate = async (e) => {
         e.preventDefault();
+        setSubmitting(true);
         try {
-            await axios.post('http://localhost:5001/api/promotions', formData, config);
-            toast.success('Promotion created successfully');
+            await apiClient.post('/promotions', formData);
+            toast.success('Campaign launched successfully');
             setShowModal(false);
             setFormData({ title: '', description: '', discountPercentage: '', startDate: '', endDate: '' });
             fetchPromotions();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to create promotion');
+            toast.error(error.response?.data?.message || 'Campaign creation failed');
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this promotion?')) {
+        if (window.confirm('Terminate this promotion campaign?')) {
             try {
-                await axios.delete(`http://localhost:5001/api/promotions/${id}`, config);
-                toast.success('Promotion deleted');
+                await apiClient.delete(`/promotions/${id}`);
+                toast.success('Campaign terminated');
                 fetchPromotions();
             } catch (error) {
-                toast.error('Failed to delete promotion');
+                toast.error('Failed to terminate campaign');
             }
         }
     };
 
     return (
-        <div className="max-w-7xl mx-auto h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6">
+        <Container fluid>
+            <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Promotions & Campaigns</h1>
-                    <p className="text-slate-500 mt-1">Manage discounts and promotional events</p>
+                    <h2 className="fw-bold text-dark m-0">Marketing & Campaigns</h2>
+                    <p className="text-muted small m-0">Drive sales with targeted discounts and events</p>
                 </div>
                 {user?.role === 'admin' && (
-                    <button
+                    <Button
+                        variant="primary"
+                        className="shadow-sm rounded-3 d-flex align-items-center px-4 py-2"
                         onClick={() => setShowModal(true)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
                     >
-                        <Plus size={20} className="mr-2" />
-                        New Promotion
-                    </button>
+                        <i className="bi bi-megaphone-fill me-2"></i> Launch New Campaign
+                    </Button>
                 )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
+            <Row className="g-4">
                 {loading ? (
-                    <div className="col-span-full py-10 text-center text-slate-400">Loading promotions...</div>
+                    <Col xs={12} className="text-center py-5">
+                        <Spinner animation="border" variant="primary" />
+                        <p className="mt-3 text-muted fw-medium">Syncing campaign data...</p>
+                    </Col>
                 ) : promotions.length === 0 ? (
-                    <div className="col-span-full py-10 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-300">
-                        No active promotions.
-                    </div>
+                    <Col xs={12}>
+                        <Card className="border-0 shadow-sm rounded-4 text-center py-5 bg-white border border-dashed">
+                            <Card.Body>
+                                <i className="bi bi-tag-fill fs-1 text-muted opacity-25 d-block mb-3"></i>
+                                <h5 className="fw-bold text-muted">No Active Campaigns</h5>
+                                <p className="text-muted small px-3">Start a new promotion to boost customer engagement.</p>
+                            </Card.Body>
+                        </Card>
+                    </Col>
                 ) : (
                     promotions.map(promo => (
-                        <div key={promo._id} className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 flex flex-col hover:shadow-xl transition relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition">
-                                {user?.role === 'admin' && (
-                                    <button onClick={() => handleDelete(promo._id)} className="text-rose-400 hover:text-rose-600 bg-rose-50 p-2 rounded-lg hover:bg-rose-100 transition">
-                                        <Trash2 size={18} />
-                                    </button>
-                                )}
-                            </div>
+                        <Col key={promo._id} md={6} lg={4}>
+                            <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden hover-lift transition">
+                                <Card.Body className="p-4 d-flex flex-column">
+                                    <div className="d-flex justify-content-between align-items-start mb-3">
+                                        <div className="rounded-4 bg-primary bg-opacity-10 text-primary p-3 d-flex align-items-center justify-content-center shadow-sm" style={{ width: '56px', height: '56px' }}>
+                                            <i className="bi bi-tag-fill fs-3"></i>
+                                        </div>
+                                        <div className="d-flex flex-column align-items-end">
+                                            <Badge bg={promo.status === 'Active' ? 'success' : 'secondary'} className="px-3 py-2 rounded-pill fw-bold mb-2">
+                                                {promo.status}
+                                            </Badge>
+                                            {user?.role === 'admin' && (
+                                                <Button
+                                                    variant="light"
+                                                    size="sm"
+                                                    className="rounded-circle text-danger shadow-none"
+                                                    onClick={() => handleDelete(promo._id)}
+                                                >
+                                                    <i className="bi bi-trash3-fill"></i>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
 
-                            <div className="flex items-center gap-3 mb-4 relative z-10">
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center text-white shadow-lg shadow-pink-500/30">
-                                    <Tag size={24} />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-slate-800 text-lg leading-tight">{promo.title}</h3>
-                                    <span className={`text-xs font-bold uppercase tracking-wider ${promo.status === 'Active' ? 'text-emerald-500' : 'text-slate-400'}`}>
-                                        {promo.status}
-                                    </span>
-                                </div>
-                            </div>
+                                    <h5 className="fw-black text-dark mb-1">{promo.title}</h5>
+                                    <div className="display-6 fw-black text-primary mb-3">
+                                        {promo.discountPercentage}% <small className="fs-6 fw-bold text-muted">SAVINGS</small>
+                                    </div>
 
-                            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500 mb-2">
-                                {promo.discountPercentage}% OFF
-                            </div>
+                                    <p className="text-muted small mb-4 flex-grow-1 lh-base">
+                                        {promo.description || 'Exclusive limited-time offer for our valued customers.'}
+                                    </p>
 
-                            <p className="text-slate-600 text-sm mb-6 flex-1 line-clamp-2">
-                                {promo.description || 'No description provided.'}
-                            </p>
-
-                            <div className="bg-slate-50 rounded-xl p-3 flex items-center gap-3 border border-slate-100 mt-auto">
-                                <Calendar size={18} className="text-slate-400 shrink-0" />
-                                <div className="text-xs text-slate-600 font-medium">
-                                    <span className="block text-slate-400 uppercase tracking-wider text-[10px]">Valid Until</span>
-                                    {new Date(promo.endDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-                                </div>
-                            </div>
-                        </div>
+                                    <div className="mt-auto pt-3 border-top border-light">
+                                        <div className="d-flex align-items-center text-muted">
+                                            <div className="bg-light p-2 rounded-3 me-3">
+                                                <i className="bi bi-calendar-event text-dark"></i>
+                                            </div>
+                                            <div>
+                                                <label className="xxs fw-bold text-uppercase letter-spacing-1 d-block mb-0">EXPIRY DATE</label>
+                                                <span className="fw-bold text-dark small">{new Date(promo.endDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card.Body>
+                            </Card>
+                        </Col>
                     ))
                 )}
-            </div>
+            </Row>
 
-            {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold text-slate-800">New Promotion</h2>
-                            <button onClick={() => setShowModal(false)} className="p-1 hover:bg-slate-100 rounded-full transition"><X size={24} className="text-slate-500" /></button>
-                        </div>
-                        <form onSubmit={handleCreate} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
-                                <input
-                                    type="text"
-                                    className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
-                                    required
-                                    value={formData.title}
-                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                                <textarea
-                                    className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
-                                    rows="2"
-                                    value={formData.description}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Discount %</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="100"
-                                    className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
-                                    required
-                                    value={formData.discountPercentage}
-                                    onChange={e => setFormData({ ...formData, discountPercentage: e.target.value })}
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
-                                    <input
+            <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg">
+                <Modal.Header closeButton className="border-0 pb-0">
+                    <Modal.Title className="fw-bold">Campaign Architect</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="p-4">
+                    <Form onSubmit={handleCreate}>
+                        <Row className="g-3 mb-4">
+                            <Col md={12}>
+                                <Form.Group>
+                                    <Form.Label className="small fw-bold text-muted">CAMPAIGN TITLE</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="e.g. Summer Wellness Festival"
+                                        className="bg-light border-0 py-2 rounded-3 shadow-none fw-bold"
+                                        required
+                                        value={formData.title}
+                                        onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={12}>
+                                <Form.Group>
+                                    <Form.Label className="small fw-bold text-muted">OFFER DESCRIPTION</Form.Label>
+                                    <Form.Control
+                                        as="textarea"
+                                        rows={2}
+                                        className="bg-light border-0 py-2 rounded-3 shadow-none fw-bold"
+                                        placeholder="Detailed explanation of the promotion..."
+                                        value={formData.description}
+                                        onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={4}>
+                                <Form.Group>
+                                    <Form.Label className="small fw-bold text-muted">DISCOUNT (%)</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        min="1" max="100"
+                                        className="bg-light border-0 py-2 rounded-3 shadow-none fw-bold text-center"
+                                        required
+                                        value={formData.discountPercentage}
+                                        onChange={e => setFormData({ ...formData, discountPercentage: e.target.value })}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={4}>
+                                <Form.Group>
+                                    <Form.Label className="small fw-bold text-muted">START DATE</Form.Label>
+                                    <Form.Control
                                         type="date"
-                                        className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="bg-light border-0 py-2 rounded-3 shadow-none fw-bold"
                                         required
                                         value={formData.startDate}
                                         onChange={e => setFormData({ ...formData, startDate: e.target.value })}
                                     />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
-                                    <input
+                                </Form.Group>
+                            </Col>
+                            <Col md={4}>
+                                <Form.Group>
+                                    <Form.Label className="small fw-bold text-muted">END DATE</Form.Label>
+                                    <Form.Control
                                         type="date"
-                                        className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="bg-light border-0 py-2 rounded-3 shadow-none fw-bold"
                                         required
                                         value={formData.endDate}
                                         onChange={e => setFormData({ ...formData, endDate: e.target.value })}
                                     />
-                                </div>
-                            </div>
-                            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2.5 border rounded-xl hover:bg-slate-50 font-medium text-slate-600 transition">Cancel</button>
-                                <button type="submit" className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition">Create</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-        </div>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <div className="d-grid gap-2">
+                            <Button variant="primary" type="submit" size="lg" className="py-3 rounded-4 fw-bold shadow-lg" disabled={submitting}>
+                                {submitting ? 'Calibrating Campaign...' : 'Finalize and Launch'}
+                            </Button>
+                            <Button variant="link" className="text-muted text-decoration-none fw-bold small" onClick={() => setShowModal(false)}>
+                                Abandon Setup
+                            </Button>
+                        </div>
+                    </Form>
+                </Modal.Body>
+            </Modal>
+        </Container>
     );
 };
 

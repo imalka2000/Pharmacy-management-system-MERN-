@@ -1,56 +1,71 @@
-import { X, Calendar, DollarSign, Package, Box } from 'lucide-react';
+import { Modal, Button, ListGroup } from 'react-bootstrap';
 
 const ViewMedicineModal = ({ medicine, onClose }) => {
     if (!medicine) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
-                <div className="flex justify-between items-center p-4 border-b bg-green-50">
-                    <h2 className="text-xl font-bold text-green-900">{medicine.name}</h2>
-                    <button onClick={onClose} className="p-1 hover:bg-green-100 rounded-full transition">
-                        <X size={24} className="text-green-700" />
-                    </button>
-                </div>
-
-                <div className="p-6 space-y-4">
-                    {medicine.imageUrl && (
-                        <div className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden border mb-4">
-                            <img src={`http://localhost:5001${medicine.imageUrl}`} alt={medicine.name} className="w-full h-full object-contain" />
-                        </div>
-                    )}
-
-                    <div className="flex items-center justify-between border-b pb-2">
-                        <span className="text-gray-500 font-medium">Batch Number</span>
-                        <span className="text-gray-800 font-semibold">{medicine.batchNumber}</span>
+        <Modal show={!!medicine} onHide={onClose} centered size="md" className="border-0">
+            <Modal.Header closeButton className="border-0 pb-0">
+                <Modal.Title className="fw-bold text-dark">{medicine.name}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="p-4">
+                {medicine.imageUrl && (
+                    <div className="rounded-4 bg-light overflow-hidden border mb-4 text-center p-3" style={{ height: '220px' }}>
+                        <img
+                            src={medicine.imageUrl.startsWith('http') ? medicine.imageUrl : `http://localhost:5001${medicine.imageUrl}`}
+                            alt={medicine.name}
+                            className="h-100 w-auto object-contain"
+                        />
                     </div>
+                )}
 
-                    <div className="flex items-center justify-between border-b pb-2">
-                        <span className="text-gray-500 font-medium flex items-center"><Calendar size={16} className="mr-1" /> Expiry Date</span>
-                        <span className={`font-semibold ${new Date(medicine.expiryDate) < new Date() ? 'text-red-500' : 'text-gray-800'}`}>
+                <ListGroup variant="flush" className="rounded-4 border shadow-sm">
+                    <ListGroup.Item className="d-flex justify-content-between align-items-center py-3">
+                        <span className="text-muted small fw-bold text-uppercase">Batch Number</span>
+                        <span className="fw-bold text-dark">{medicine.batchNumber}</span>
+                    </ListGroup.Item>
+
+                    <ListGroup.Item className="d-flex justify-content-between align-items-center py-3">
+                        <span className="text-muted small fw-bold text-uppercase">
+                            <i className="bi bi-calendar-event me-2"></i> Expiry Date
+                        </span>
+                        <span className={`fw-bold ${new Date(medicine.expiryDate) < new Date() ? 'text-danger' : 'text-dark'}`}>
                             {new Date(medicine.expiryDate).toLocaleDateString()}
                         </span>
-                    </div>
+                    </ListGroup.Item>
 
-                    <div className="flex items-center justify-between border-b pb-2">
-                        <span className="text-gray-500 font-medium flex items-center"><DollarSign size={16} className="mr-1" /> Price</span>
-                        <span className="text-gray-800 font-bold text-lg">${medicine.price}</span>
-                    </div>
+                    <ListGroup.Item className="d-flex justify-content-between align-items-center py-3">
+                        <span className="text-muted small fw-bold text-uppercase">
+                            <i className="bi bi-tag me-2"></i> Price
+                        </span>
+                        <span className="fw-bold text-primary fs-5">${medicine.price.toFixed(2)}</span>
+                    </ListGroup.Item>
 
-                    <div className="flex items-center justify-between border-b pb-2">
-                        <span className="text-gray-500 font-medium flex items-center"><Box size={16} className="mr-1" /> Quantity In Stock</span>
-                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${medicine.quantity < 10 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                    <ListGroup.Item className="d-flex justify-content-between align-items-center py-3">
+                        <span className="text-muted small fw-bold text-uppercase">
+                            <i className="bi bi-box me-2"></i> Stock Quantity
+                        </span>
+                        <span className={`badge rounded-pill ${medicine.quantity < 10 ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'} py-2 px-3 fw-bold`}>
                             {medicine.quantity} units
                         </span>
-                    </div>
+                    </ListGroup.Item>
+                </ListGroup>
 
-                    <div>
-                        <span className="text-gray-500 font-medium block mb-1 flex items-center"><Package size={16} className="mr-1" /> Manufacturer</span>
-                        <p className="text-gray-800 bg-gray-50 p-3 rounded">{medicine.manufacturer || 'N/A'}</p>
+                <div className="mt-4">
+                    <span className="text-muted small fw-bold text-uppercase d-block mb-2">
+                        <i className="bi bi-building me-2"></i> Manufacturer
+                    </span>
+                    <div className="bg-light p-3 rounded-3 text-dark border">
+                        {medicine.manufacturer || 'Information not provided'}
                     </div>
                 </div>
-            </div>
-        </div>
+            </Modal.Body>
+            <Modal.Footer className="border-0 pt-0 pf-4 pb-4">
+                <Button variant="light" className="w-100 py-2 fw-bold" onClick={onClose}>
+                    Close Details
+                </Button>
+            </Modal.Footer>
+        </Modal>
     );
 };
 

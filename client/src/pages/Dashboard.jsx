@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import apiClient from '../api-request/config';
 import useAuth from '../hooks/useAuth';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Truck, MessageSquare, Tag, Package } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Row, Col, Card, Spinner, Badge } from 'react-bootstrap';
 
 const Dashboard = () => {
     const { user } = useAuth();
@@ -11,147 +11,173 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const token = user.token;
-                const config = { headers: { Authorization: `Bearer ${token}` } };
-                const { data } = await axios.get('http://localhost:5001/api/reports/dashboard', config);
+                const { data } = await apiClient.get('/reports/dashboard');
                 setStats(data);
             } catch (error) {
-                console.error(error);
+                console.error('Intelligence gathering error:', error);
             }
         };
         if (user?.token && !stats) fetchStats();
     }, [user, stats]);
 
-    if (!stats) return <div className="p-10 text-center text-slate-500">Loading Dashboard...</div>;
+    if (!stats) return (
+        <div className="d-flex flex-column justify-content-center align-items-center p-5 min-vh-50">
+            <Spinner animation="grow" variant="primary" />
+            <p className="mt-4 text-muted fw-bold small uppercase letter-spacing-2">Assembling System Intelligence...</p>
+        </div>
+    );
 
-    const data = [
-        { name: 'Medicines', count: stats.totalMedicines || 0 },
-        { name: 'Suppliers', count: stats.totalSuppliers || 0 },
-        { name: 'Sales', count: stats.totalSales || 0 },
-        { name: 'Promos', count: stats.activePromotions || 0 },
-        { name: 'Deliveries', count: stats.pendingDeliveries || 0 }
+    const chartData = [
+        { name: 'Medicines', count: stats.totalMedicines || 0, color: '#0d6efd' },
+        { name: 'Suppliers', count: stats.totalSuppliers || 0, color: '#6610f2' },
+        { name: 'Sales', count: stats.totalSales || 0, color: '#10b981' },
+        { name: 'Promos', count: stats.activePromotions || 0, color: '#f59e0b' },
+        { name: 'Deliveries', count: stats.pendingDeliveries || 0, color: '#ef4444' }
     ];
 
+    const StatCard = ({ title, value, icon, variant, trend }) => (
+        <Col md={6} lg={3} className="mb-4">
+            <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden hover-lift transition">
+                <Card.Body className="p-4">
+                    <div className="d-flex justify-content-between align-items-start mb-3">
+                        <div className={`rounded-4 p-3 bg-${variant}-subtle text-${variant} shadow-sm border border-${variant} border-opacity-10 d-flex align-items-center justify-content-center`} style={{ width: '54px', height: '54px' }}>
+                            <i className={`bi bi-${icon} fs-3`}></i>
+                        </div>
+                        {trend && (
+                            <Badge bg="success-subtle" text="success" className="rounded-pill px-2 py-1 small fw-bold">
+                                <i className="bi bi-graph-up-arrow me-1"></i> {trend}
+                            </Badge>
+                        )}
+                    </div>
+                    <div>
+                        <h6 className="text-muted xxs fw-bold text-uppercase mb-1 mb-2 letter-spacing-1">{title}</h6>
+                        <h2 className="fw-black mb-0 text-dark">{value}</h2>
+                    </div>
+                </Card.Body>
+            </Card>
+        </Col>
+    );
+
+    const MetricCard = ({ title, value, icon, gradient }) => (
+        <Col xs={6} md={3} className="mb-4">
+            <Card className="border-0 rounded-4 shadow-lg text-white h-100 overflow-hidden hover-lift transition"
+                style={{ background: gradient }}>
+                <Card.Body className="p-4 d-flex flex-column justify-content-between position-relative z-1">
+                    <div className="text-end mb-2 opacity-25">
+                        <i className={`bi bi-${icon} display-4`}></i>
+                    </div>
+                    <div>
+                        <h1 className="fw-black mb-0 display-5">{value}</h1>
+                        <p className="xxs fw-bold opacity-75 text-uppercase m-0 letter-spacing-1">{title}</p>
+                    </div>
+                </Card.Body>
+                <div className="position-absolute bottom-0 end-0 p-3 opacity-10">
+                    <i className={`bi bi-${icon}`} style={{ fontSize: '120px', marginRight: '-40px', marginBottom: '-40px' }}></i>
+                </div>
+            </Card>
+        </Col>
+    );
+
     return (
-        <div className="max-w-7xl mx-auto pb-10">
-            <h1 className="text-3xl font-extrabold mb-8 text-slate-800 tracking-tight">Admin Dashboard V2</h1>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {/* Revenue Card */}
-                <div className="relative overflow-hidden rounded-2xl shadow-lg border border-blue-100 group hover:shadow-xl transition-all duration-300 bg-white">
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-500 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-                    <div className="p-6 relative z-10">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-sm font-semibold text-blue-500 uppercase tracking-wider mb-1">Total Revenue</p>
-                                <h3 className="text-3xl font-bold text-slate-800">${(stats.totalRevenue || 0).toFixed(2)}</h3>
-                            </div>
-                            <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-                            </div>
-                        </div>
-                    </div>
+        <div className="container-fluid px-0">
+            <div className="d-flex flex-wrap justify-content-between align-items-end mb-5 gap-3">
+                <div>
+                    <h1 className="fw-black text-dark m-0 letter-spacing-n1">Command Center</h1>
+                    <p className="text-muted fw-bold small m-0 uppercase opacity-75">Intelligence Engine & Operations Registry</p>
                 </div>
-
-                {/* Sales Card */}
-                <div className="relative overflow-hidden rounded-2xl shadow-lg border border-emerald-100 group hover:shadow-xl transition-all duration-300 bg-white">
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-emerald-500 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-                    <div className="p-6 relative z-10">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-sm font-semibold text-emerald-500 uppercase tracking-wider mb-1">Total Sales</p>
-                                <h3 className="text-3xl font-bold text-slate-800">{stats.totalSales || 0}</h3>
-                            </div>
-                            <div className="p-3 bg-emerald-50 rounded-lg text-emerald-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
-                            </div>
+                <div className="text-end">
+                    <div className="d-flex align-items-center bg-white border rounded-4 px-3 py-2 shadow-sm">
+                        <div className="bg-primary bg-opacity-10 rounded-3 p-2 me-3">
+                            <i className="bi bi-calendar3 text-primary"></i>
                         </div>
-                    </div>
-                </div>
-
-                {/* Low Stock */}
-                <div className="relative overflow-hidden rounded-2xl shadow-lg border border-orange-100 group hover:shadow-xl transition-all duration-300 bg-white">
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-orange-500 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-                    <div className="p-6 relative z-10">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-1">Low Stock</p>
-                                <h3 className="text-3xl font-bold text-slate-800">{stats.lowStock || 0}</h3>
-                            </div>
-                            <div className="p-3 bg-orange-50 rounded-lg text-orange-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Out of Stock */}
-                <div className="relative overflow-hidden rounded-2xl shadow-lg border border-rose-100 group hover:shadow-xl transition-all duration-300 bg-white">
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-rose-500 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500"></div>
-                    <div className="p-6 relative z-10">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-sm font-semibold text-rose-500 uppercase tracking-wider mb-1">Out of Stock</p>
-                                <h3 className="text-3xl font-bold text-slate-800">{stats.outOfStock || 0}</h3>
-                            </div>
-                            <div className="p-3 bg-rose-50 rounded-lg text-rose-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
-                            </div>
+                        <div className="text-start">
+                            <small className="text-muted fw-bold xxs d-block letter-spacing-1 uppercase">Operational Date</small>
+                            <span className="fw-bold text-dark small">
+                                {new Date().toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* V2 Integration Cards */}
-            <h2 className="text-xl font-bold mb-4 text-slate-800 tracking-tight">V2 Integrations Actions</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-5 rounded-2xl text-white shadow-lg shadow-indigo-500/20">
-                    <Truck size={24} className="mb-3 opacity-90" />
-                    <h3 className="text-2xl font-black mb-1">{stats.pendingDeliveries || 0}</h3>
-                    <p className="text-sm font-medium opacity-90 uppercase tracking-widest text-indigo-100">Pending Deliveries</p>
+            <Row>
+                <StatCard title="Total Market Revenue" value={`$${(stats.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} icon="currency-exchange" variant="primary" trend="+12%" />
+                <StatCard title="Processed Transactions" value={stats.totalSales || 0} icon="receipt-cutoff" variant="success" trend="+5%" />
+                <StatCard title="Critical Stock Alerts" value={stats.lowStock || 0} icon="shield-exclamation" variant="warning" />
+                <StatCard title="Inventory Depletion" value={stats.outOfStock || 0} icon="stop-circle" variant="danger" />
+            </Row>
+
+            <div className="my-4">
+                <div className="d-flex align-items-center mb-4 ps-1">
+                    <div className="bg-dark rounded-circle me-3 d-flex align-items-center justify-content-center shadow-sm" style={{ width: '8px', height: '8px' }}></div>
+                    <h6 className="xxs fw-black text-muted text-uppercase m-0 letter-spacing-2">Logistics & Service Pipeline</h6>
                 </div>
-                <div className="bg-gradient-to-br from-pink-500 to-rose-600 p-5 rounded-2xl text-white shadow-lg shadow-pink-500/20">
-                    <Tag size={24} className="mb-3 opacity-90" />
-                    <h3 className="text-2xl font-black mb-1">{stats.activePromotions || 0}</h3>
-                    <p className="text-sm font-medium opacity-90 uppercase tracking-widest text-pink-100">Active Promos</p>
-                </div>
-                <div className="bg-gradient-to-br from-amber-500 to-orange-500 p-5 rounded-2xl text-white shadow-lg shadow-amber-500/20">
-                    <MessageSquare size={24} className="mb-3 opacity-90" />
-                    <h3 className="text-2xl font-black mb-1">{stats.pendingFeedback || 0}</h3>
-                    <p className="text-sm font-medium opacity-90 uppercase tracking-widest text-amber-100">New Feedback</p>
-                </div>
-                <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-5 rounded-2xl text-white shadow-lg shadow-cyan-500/20">
-                    <Package size={24} className="mb-3 opacity-90" />
-                    <h3 className="text-2xl font-black mb-1">{stats.pendingSupplyRequests || 0}</h3>
-                    <p className="text-sm font-medium opacity-90 uppercase tracking-widest text-cyan-100">Supply Orders</p>
-                </div>
+                <Row>
+                    <MetricCard title="Pending Logistics" value={stats.pendingDeliveries || 0} icon="truck" gradient="linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)" />
+                    <MetricCard title="Active Campaigns" value={stats.activePromotions || 0} icon="megaphone-fill" gradient="linear-gradient(135deg, #10b981 0%, #047857 100%)" />
+                    <MetricCard title="Inbound Feedback" value={stats.pendingFeedback || 0} icon="chat-square-text-fill" gradient="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" />
+                    <MetricCard title="Supply Procurement" value={stats.pendingSupplyRequests || 0} icon="terminal-fill" gradient="linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)" />
+                </Row>
             </div>
 
-            {/* Chart Area */}
-            <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 h-96">
-                <h3 className="text-xl font-bold mb-6 text-slate-800 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-indigo-500"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
-                    System Statistics Overview
-                </h3>
-                <ResponsiveContainer width="100%" height="100%" className="-ml-4">
-                    <BarChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} dy={10} />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                        <Tooltip
-                            cursor={{ fill: '#f1f5f9' }}
-                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', padding: '12px' }}
-                        />
-                        <Bar dataKey="count" fill="url(#colorGradient)" radius={[6, 6, 0, 0]} barSize={50} />
-                        <defs>
-                            <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#6366f1" stopOpacity={1} />
-                                <stop offset="100%" stopColor="#4338ca" stopOpacity={0.8} />
-                            </linearGradient>
-                        </defs>
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
+            <Row className="mt-4">
+                <Col lg={12}>
+                    <Card className="border-0 shadow-sm rounded-4 p-4 mb-5 bg-white overflow-hidden">
+                        <div className="d-flex flex-wrap justify-content-between align-items-center mb-5">
+                            <div className="d-flex align-items-center">
+                                <div className="bg-primary bg-opacity-10 p-3 rounded-4 me-4 shadow-sm">
+                                    <i className="bi bi-cpu-fill text-primary fs-3"></i>
+                                </div>
+                                <div>
+                                    <h4 className="fw-black text-dark m-0">System Topology</h4>
+                                    <p className="text-muted fw-bold small m-0 text-uppercase opacity-50 letter-spacing-1">Resource distribution across functional nodes</p>
+                                </div>
+                            </div>
+                            <div className="mt-3 mt-md-0">
+                                <Badge bg="primary" className="px-4 py-2 rounded-pill fw-black letter-spacing-1 shadow-primary">
+                                    <i className="bi bi-lightning-charge-fill me-2"></i> SYSTEM OPTIMAL
+                                </Badge>
+                            </div>
+                        </div>
+                        <div style={{ width: '100%', height: 400 }}>
+                            <ResponsiveContainer>
+                                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                                    <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#64748b', fontSize: 12, fontWeight: '800', textTransform: 'uppercase' }}
+                                        dy={15}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: '600' }}
+                                    />
+                                    <Tooltip
+                                        cursor={{ fill: '#f8fafc', radius: 10 }}
+                                        contentStyle={{
+                                            borderRadius: '20px',
+                                            border: 'none',
+                                            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+                                            padding: '20px',
+                                            background: '#fff'
+                                        }}
+                                        itemStyle={{ fontWeight: '900', color: '#1e293b', fontSize: '14px' }}
+                                        labelStyle={{ fontWeight: 'bold', color: '#64748b', marginBottom: '8px', fontSize: '12px', textTransform: 'uppercase' }}
+                                    />
+                                    <Bar dataKey="count" radius={[12, 12, 4, 4]} barSize={60}>
+                                        {chartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </Card>
+                </Col>
+            </Row>
         </div>
     );
 };

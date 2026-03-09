@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../api-request/config';
 import useAuth from '../hooks/useAuth';
-import { Plus, Search, UserCheck, Briefcase } from 'lucide-react';
+import { Button, Form, Row, Col, Card, Badge, Modal, Spinner, InputGroup } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 
 const Employees = () => {
@@ -10,35 +10,47 @@ const Employees = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState({ username: '', password: '', role: 'pharmacist', fullName: '', email: '', phone: '', salary: '' });
-
-    const config = { headers: { Authorization: `Bearer ${user?.token}` } };
+    const [submitting, setSubmitting] = useState(false);
+    const [formData, setFormData] = useState({
+        username: '',
+        password: '',
+        role: 'pharmacist',
+        fullName: '',
+        email: '',
+        phone: '',
+        salary: ''
+    });
 
     useEffect(() => {
-        if (user?.token && employees.length === 0) fetchEmployees();
+        if (user?.token) fetchEmployees();
     }, [user]);
 
     const fetchEmployees = async () => {
+        setLoading(true);
         try {
-            const { data } = await axios.get('http://localhost:5001/api/auth/users', config);
+            const { data } = await apiClient.get('/auth/users');
             setEmployees(data.filter(u => u.role !== 'user')); // Filter staff only
-            setLoading(false);
         } catch (error) {
-            console.error(error);
+            console.error('Directory sync error:', error);
+            toast.error('Personnel database connection interrupt');
+        } finally {
             setLoading(false);
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmitting(true);
         try {
-            await axios.post('http://localhost:5001/api/auth/register', formData, config);
-            toast.success('Employee added successfully');
+            await apiClient.post('/auth/register', formData);
+            toast.success('Personnel record established');
             setShowModal(false);
             fetchEmployees();
             setFormData({ username: '', password: '', role: 'pharmacist', fullName: '', email: '', phone: '', salary: '' });
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Error adding employee');
+            toast.error(error.response?.data?.message || 'Protocol failure during registration');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -47,113 +59,169 @@ const Employees = () => {
         u.username.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const getRoleConfig = (role) => {
+        switch (role) {
+            case 'admin': return { bg: 'danger', icon: 'bi-shield-lock-fill', label: 'Systems Overseer' };
+            case 'driver': return { bg: 'warning', icon: 'bi-truck', label: 'Logistics Operative' };
+            default: return { bg: 'success', icon: 'bi-capsule', label: 'Medical Officer' };
+        }
+    };
+
     return (
-        <div className="max-w-7xl mx-auto h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6">
+        <div className="container-fluid px-0">
+            <div className="d-flex flex-wrap justify-content-between align-items-end mb-5 gap-3">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Employee Management</h1>
-                    <p className="text-slate-500 mt-1">Manage staff, roles, and payroll info</p>
+                    <h1 className="fw-black text-dark m-0 letter-spacing-n1">Staff Directory</h1>
+                    <p className="text-muted fw-bold small m-0 uppercase opacity-75">Human Capital & Access Control Management</p>
                 </div>
-                <button
+                <Button
+                    variant="dark"
+                    className="shadow-lg rounded-4 d-flex align-items-center px-4 py-3 fw-bold border-0 transition hover-lift"
                     onClick={() => setShowModal(true)}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+                    style={{ background: 'linear-gradient(45deg, #212529, #343a40)' }}
                 >
-                    <Plus size={20} className="mr-2" />
-                    Add Employee
-                </button>
+                    <i className="bi bi-person-plus-fill me-2 fs-5"></i> Onboard New Staff
+                </Button>
             </div>
 
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 w-full max-w-md">
-                <div className="flex items-center px-2">
-                    <Search size={20} className="text-slate-400 mr-3" />
-                    <input
-                        type="text"
-                        placeholder="Search employees..."
-                        className="outline-none w-full text-slate-600 placeholder:text-slate-400"
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                    />
+            <Row className="mb-5">
+                <Col md={6} lg={4}>
+                    <InputGroup className="bg-white border rounded-4 shadow-sm overflow-hidden p-1">
+                        <InputGroup.Text className="bg-transparent border-0 pe-0 ms-2">
+                            <i className="bi bi-search text-muted"></i>
+                        </InputGroup.Text>
+                        <Form.Control
+                            placeholder="Filter by name, ID or role..."
+                            className="bg-transparent border-0 py-2 ms-0 shadow-none fw-bold small"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                        />
+                    </InputGroup>
+                </Col>
+            </Row>
+
+            {loading ? (
+                <div className="text-center py-5">
+                    <Spinner animation="border" variant="primary" />
+                    <p className="mt-3 text-muted fw-bold small uppercase letter-spacing-2">Synchronizing Bio-Metric Data...</p>
                 </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {loading ? (
-                    <div className="col-span-3 text-center py-10 text-slate-400">Loading staff...</div>
-                ) : filteredEmployees.length === 0 ? (
-                    <div className="col-span-3 text-center py-10 text-slate-400">No employees found.</div>
-                ) : (
-                    filteredEmployees.map(emp => (
-                        <div key={emp._id} className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 flex flex-col group hover:shadow-xl transition-all duration-300">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-center">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg mr-4 ${emp.role === 'admin' ? 'bg-rose-100 text-rose-600' :
-                                            emp.role === 'driver' ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'
-                                        }`}>
-                                        {emp.fullName?.charAt(0) || emp.username.charAt(0).toUpperCase()}
+            ) : filteredEmployees.length === 0 ? (
+                <Card className="border-0 shadow-sm rounded-5 py-5 text-center bg-white">
+                    <i className="bi bi-people display-1 text-muted opacity-10 mb-3"></i>
+                    <h4 className="fw-black text-muted">No Personnel Matches</h4>
+                    <p className="text-muted small uppercase fw-bold letter-spacing-1">Try adjusting your filtration parameters</p>
+                </Card>
+            ) : (
+                <Row className="g-4">
+                    {filteredEmployees.map(emp => {
+                        const config = getRoleConfig(emp.role);
+                        return (
+                            <Col key={emp._id} md={6} lg={4} xl={3}>
+                                <Card className="border-0 shadow-sm rounded-5 h-100 overflow-hidden hover-lift transition bg-white border">
+                                    <div className={`py-5 bg-${config.bg} bg-opacity-10 d-flex justify-content-center border-bottom border-${config.bg} border-opacity-10 position-relative`}>
+                                        <div className="position-absolute top-0 end-0 p-3">
+                                            <Badge bg={config.bg} className="rounded-pill px-3 py-2 fw-black letter-spacing-1 shadow-sm uppercase xxs">
+                                                {emp.role}
+                                            </Badge>
+                                        </div>
+                                        <div className={`bg-white rounded-circle shadow-lg d-flex align-items-center justify-content-center text-${config.bg} fw-black display-6`} style={{ width: '90px', height: '90px', border: `4px solid #fff` }}>
+                                            {emp.fullName?.charAt(0) || emp.username.charAt(0).toUpperCase()}
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-slate-800 text-lg">{emp.fullName || emp.username}</h3>
-                                        <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${emp.role === 'admin' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
-                                                emp.role === 'driver' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                            }`}>{emp.role}</span>
-                                    </div>
-                                </div>
-                            </div>
+                                    <Card.Body className="p-4 text-center">
+                                        <div className="mb-4">
+                                            <h5 className="fw-black text-dark m-0 mb-1">{emp.fullName || emp.username}</h5>
+                                            <span className="text-muted fw-bold xxs text-uppercase opacity-75 letter-spacing-1">
+                                                <i className={`bi ${config.icon} me-1`}></i> {config.label}
+                                            </span>
+                                        </div>
 
-                            <div className="space-y-2 mb-4">
-                                <div className="flex items-center text-sm text-slate-500">
-                                    <Briefcase size={16} className="mr-2" />
-                                    <span>Salary: ${emp.salary || '0'}</span>
-                                </div>
-                                <div className="flex items-center text-sm text-slate-500">
-                                    <UserCheck size={16} className="mr-2" />
-                                    <span>Joined: {new Date(emp.createdAt).toLocaleDateString()}</span>
-                                </div>
-                            </div>
+                                        <div className="bg-light rounded-4 p-3 mb-4 text-start border border-dashed">
+                                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                                <span className="xxs fw-bold text-muted uppercase letter-spacing-1">Compensation</span>
+                                                <span className="fw-black text-dark small">${emp.salary || '0'}.00</span>
+                                            </div>
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <span className="xxs fw-bold text-muted uppercase letter-spacing-1">Registration</span>
+                                                <span className="fw-bold text-muted small">{new Date(emp.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                        </div>
 
-                            <button className="mt-auto w-full py-2 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 font-medium text-sm transition-colors">
-                                View Profile
-                            </button>
-                        </div>
-                    ))
-                )}
-            </div>
-
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl">
-                        <h2 className="text-2xl font-bold mb-6 text-slate-800">Add New Employee</h2>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <input className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Username" required value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} />
-                                <input className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Password" type="password" required value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <select
-                                    className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
-                                    value={formData.role}
-                                    onChange={e => setFormData({ ...formData, role: e.target.value })}
-                                >
-                                    <option value="pharmacist">Pharmacist</option>
-                                    <option value="driver">Driver</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                                <input className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Salary" type="number" value={formData.salary} onChange={e => setFormData({ ...formData, salary: e.target.value })} />
-                            </div>
-                            <input className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Full Name" value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} />
-                            <div className="grid grid-cols-2 gap-4">
-                                <input className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Email" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-                                <input className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Phone" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-4">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2.5 border rounded-xl hover:bg-slate-50 font-medium text-slate-600 transition">Cancel</button>
-                                <button type="submit" className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-medium shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition">Create Employee</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                                        <Button variant="outline-dark" size="sm" className="w-100 rounded-4 fw-black text-uppercase letter-spacing-1 py-2 border-2 small">
+                                            Modify Protocol
+                                        </Button>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        );
+                    })}
+                </Row>
             )}
+
+            <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg" className="border-0">
+                <Modal.Header closeButton className="border-0 pb-0 px-4 pt-4">
+                    <Modal.Title className="fw-black display-6 text-dark letter-spacing-n1">Onboard Staff</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="p-4 pt-2">
+                    <p className="text-muted fw-bold small text-uppercase mb-4 letter-spacing-1">Establish new system operator profile</p>
+                    <Form onSubmit={handleSubmit}>
+                        <Row className="g-4 mb-4">
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">System Identity (Username)</Form.Label>
+                                    <Form.Control className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" required value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Access Credential (Password)</Form.Label>
+                                    <Form.Control className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" type="password" required value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Assigned Designation</Form.Label>
+                                    <Form.Select className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
+                                        <option value="pharmacist">Medical Officer / Pharmacist</option>
+                                        <option value="driver">Logistics Agent / Driver</option>
+                                        <option value="admin">Systems Administrator</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Base Component Salary ($)</Form.Label>
+                                    <Form.Control className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" type="number" value={formData.salary} onChange={e => setFormData({ ...formData, salary: e.target.value })} />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Card className="bg-primary bg-opacity-10 border-0 p-4 rounded-5 mb-4 border border-primary border-opacity-10">
+                            <h6 className="xxs fw-black text-primary uppercase letter-spacing-2 mb-4">Bio-Metric & Communication Attributes</h6>
+                            <Row className="g-3">
+                                <Col md={12}>
+                                    <Form.Control className="bg-white border-0 py-3 rounded-4 shadow-sm fw-bold" placeholder="Full Legal Appellation" value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} />
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Control className="bg-white border-0 py-3 rounded-4 shadow-sm fw-bold" placeholder="Electronic Mail Address" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Control className="bg-white border-0 py-3 rounded-4 shadow-sm fw-bold" placeholder="Direct Communication Node" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                                </Col>
+                            </Row>
+                        </Card>
+
+                        <div className="d-flex gap-3">
+                            <Button variant="light" className="w-100 py-3 rounded-4 fw-black text-muted uppercase letter-spacing-1 border" onClick={() => setShowModal(false)} disabled={submitting}>
+                                Abandon
+                            </Button>
+                            <Button variant="primary" type="submit" className="w-100 py-3 rounded-4 fw-black uppercase letter-spacing-1 shadow-primary border-0" disabled={submitting}>
+                                {submitting ? 'Processing...' : 'Deploy Profile'}
+                            </Button>
+                        </div>
+                    </Form>
+                </Modal.Body>
+            </Modal>
         </div>
     );
 };

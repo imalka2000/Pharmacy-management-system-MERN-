@@ -1,0 +1,170 @@
+
+.navigation-collapse {
+  line-height: 1.5;
+  min-height: auto;
+  padding: 10px 20px;
+  padding-left: 50px;
+  display: block;
+  transition: all 0.2s ease-out;
+  -webkit-transition: all 0.2s ease-out;
+  -moz-transition: all 0.2s ease-out;
+  -o-transition: all 0.2s ease-out;
+  -ms-transition: all 0.2s ease-out;
+  color: #8a8a8a;
+  background: #192532;
+}
+
+.side-nav {
+  width: 250px;
+  background-color: #ffffff;
+  z-index: 1000;
+  top: 65px;
+  bottom: 0px;
+  position: fixed;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  -webkit-transition: all 0.2s ease;
+  -moz-transition: all 0.2s ease;
+  -o-transition: all 0.2s ease;
+  -ms-transition: all 0.2s ease;
+}
+
+.side-nav .side-nav-inner {
+  position: relative;
+  height: 100%;
+}
+
+.side-nav .side-nav-inner .side-nav-menu {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+  overflow: auto;
+  height: calc(100vh - 65px);
+  border-right: 1px solid #e9eaec;
+}
+
+.side-nav .side-nav-inner .side-nav-menu .side-nav-menu-item-list {
+  position: relative;
+  display: block;
+}
+
+.side-nav .side-nav-inner .side-nav-menu .nav-item {
+  position: relative;
+  display: block;
+}
+
+.side-nav-dark .side-nav {
+  background-color: #1a2942;
+  color: #99abb4;
+}
+
+.side-nav-dark .side-nav .side-nav-inner .side-nav-menu .side-nav-menu-item {
+  color: #99abb4;
+}
+
+.side-nav-dark .side-nav .side-nav-inner .side-nav-menu .side-nav-menu-item:hover .title, .side-nav-dark .side-nav .side-nav-inner .side-nav-menu div .side-nav-menu-item:hover .icon-holder {
+  color: #ffffff;
+}
+
+.side-nav-dark .side-nav .side-nav-inner .side-nav-menu .side-nav-menu-item:focus .title, .side-nav-dark .side-nav .side-nav-inner .side-nav-menu .side-nav-menu-item:focus .icon-holder {
+  color: #ffffff;
+}
+
+.side-nav .side-nav-inner .side-nav-menu div.dropdown.open .side-nav-menu-item .icon-holder {
+  color: #ffffff;
+}
+
+.side-nav .side-nav-inner .side-nav-menu .nav-item .side-nav-menu-item {
+  color: #8a8a8a;
+  transition: all 0.3s ease;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+}
+
+.side-nav .side-nav-inner .side-nav-menu .nav-item .side-nav-menu-item {
+  position: relative;
+  display: block;
+  padding: 10px 15px;
+  font-weight: 500;
+  font-size: 15px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.side-nav .side-nav-inner .side-nav-menu .nav-item .side-nav-menu-item  .icon-holder {
+  display: inline-block;
+  height: 25px;
+  width: 25px;
+  line-height: 25px;
+  text-align: center;
+  position: relative;
+  left: 0;
+  font-size: 20px;
+  margin-right: 14px;
+}
+
+.side-nav .side-nav-inner .side-nav-menu .nav-item .side-nav-menu-item .icon-holder i {
+  vertical-align: middle;
+}
+
+.side-nav .side-nav-inner .side-nav-menu .nav-item .side-nav-menu-item:hover,
+.side-nav .side-nav-inner .side-nav-menu .nav-item .side-nav-menu-item:focus {
+  color: #fff;
+  background: #e22a6f;
+}
+
+.side-nav-folded .side-nav {
+  width: 65px;
+}
+
+.side-nav-folded .side-nav .side-nav-menu {
+  overflow-x: hidden;
+}
+
+
+.side-nav-folded .side-nav .side-nav-menu .nav-item .side-nav-menu-item {
+  padding-left: 20px;
+}
+
+.side-nav-folded .side-nav .side-nav-menu .nav-item .side-nav-menu-item .title {
+  display: none;
+}
+
+.side-nav-folded .side-nav .side-nav-menu .nav-item .side-nav-menu-item .icon-holder i {
+  font-size: 20px;
+}
+
+.side-nav-folded .side-nav .side-nav-menu .side-nav-header {
+  display: none;
+}
+
+@media only screen and (min-width: 992px) {
+  .side-nav-folded .side-nav .side-nav-inner .side-nav-menu .nav-item .side-nav-header {
+    display: none;
+  }
+  .side-nav-folded .side-nav .side-nav-inner .side-nav-menu .nav-item .side-nav-menu-item {
+    padding-left: 20px;
+  }
+  .side-nav-folded .side-nav .side-nav-inner .side-nav-menu .nav-item .side-nav-menu-item .title {
+    display: none;
+  }
+
+  .side-nav-folded .side-nav:hover {
+    width: 250px;
+  }
+  .side-nav-folded .side-nav:hover .side-nav-inner .side-nav-menu .nav-item .side-nav-header {
+    display: block;
+  }
+  .side-nav-folded .side-nav:hover .side-nav-inner .side-nav-menu .nav-item .side-nav-menu-item .title {
+    display: inline-block;
+  }
+
+  .side-nav .side-nav-inner .side-nav-menu .nav-item  .side-nav-menu-item:after {
+  display: none;
+  border-radius: 0px;
+}
+
+}

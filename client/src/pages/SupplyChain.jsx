@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../api-request/config';
 import useAuth from '../hooks/useAuth';
-import { Plus, Search, Truck, Package, Clock, CheckCircle } from 'lucide-react';
+import { Container, Row, Col, Card, Button, Form, Badge, Spinner, InputGroup } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import SupplyRequestModal from '../components/SupplyRequestModal';
 
@@ -13,53 +13,43 @@ const SupplyChain = () => {
     const [showModal, setShowModal] = useState(false);
     const [filterStatus, setFilterStatus] = useState('All');
 
-    const config = { headers: { Authorization: `Bearer ${user?.token}` } };
-
     useEffect(() => {
         if (user?.token) fetchRequests();
     }, [user]);
 
     const fetchRequests = async () => {
+        setLoading(true);
         try {
-            const { data } = await axios.get('http://localhost:5001/api/supply-requests', config);
+            const { data } = await apiClient.get('/supply-requests');
             setRequests(data);
-            setLoading(false);
         } catch (error) {
             console.error('Error fetching supply requests:', error);
-            toast.error('Failed to load supply chain data');
+            toast.error('Inventory Sync Error: Failed to load supplies');
+        } finally {
             setLoading(false);
         }
     };
 
     const updateStatus = async (id, status) => {
         try {
-            await axios.put(`http://localhost:5001/api/supply-requests/${id}/status`, { status }, config);
-            toast.success(`Request marked as ${status}`);
+            await apiClient.put(`/supply-requests/${id}/status`, { status });
+            toast.success(`Request status: ${status}`);
             if (status === 'Received') {
-                toast.success('Inventory stock updated automatically'); // Highlight core feature
+                toast.success('Inventory stock auto-reconciled');
             }
             fetchRequests();
         } catch (error) {
-            toast.error('Failed to update status');
+            toast.error('Control error: Failed to sync status');
         }
     };
 
-    const getStatusStyle = (status) => {
+    const getStatusConfig = (status) => {
         switch (status) {
-            case 'Pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-            case 'Sent to Supplier': return 'bg-blue-100 text-blue-700 border-blue-200';
-            case 'Received': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-            case 'Cancelled': return 'bg-rose-100 text-rose-700 border-rose-200';
-            default: return 'bg-slate-100 text-slate-600';
-        }
-    };
-
-    const StatusIcon = ({ status }) => {
-        switch (status) {
-            case 'Pending': return <Clock size={20} className="text-yellow-500" />;
-            case 'Sent to Supplier': return <Truck size={20} className="text-blue-500" />;
-            case 'Received': return <CheckCircle size={20} className="text-emerald-500" />;
-            default: return <Package size={20} className="text-slate-500" />;
+            case 'Pending': return { bg: 'warning-subtle', text: 'warning', icon: 'bi-hourglass-split' };
+            case 'Sent to Supplier': return { bg: 'primary-subtle', text: 'primary', icon: 'bi-truck' };
+            case 'Received': return { bg: 'success-subtle', text: 'success', icon: 'bi-check-circle-fill' };
+            case 'Cancelled': return { bg: 'danger-subtle', text: 'danger', icon: 'bi-x-circle-fill' };
+            default: return { bg: 'light', text: 'secondary', icon: 'bi-box' };
         }
     };
 
@@ -71,105 +61,139 @@ const SupplyChain = () => {
     });
 
     return (
-        <div className="max-w-7xl mx-auto h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6">
+        <Container fluid>
+            <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Supply Chain</h1>
-                    <p className="text-slate-500 mt-1">Manage stock replenishment requests</p>
+                    <h2 className="fw-bold text-dark m-0">Supply Pipeline</h2>
+                    <p className="text-muted small m-0">Orchestrate inventory replenishment and supplier coordination</p>
                 </div>
-                <button
+                <Button
+                    variant="primary"
+                    className="shadow-sm rounded-3 d-flex align-items-center px-4 py-2"
                     onClick={() => setShowModal(true)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
                 >
-                    <Plus size={20} className="mr-2" />
-                    New Request
-                </button>
+                    <i className="bi bi-plus-lg me-2"></i> New Resource Request
+                </Button>
             </div>
 
-            <div className="flex gap-4 mb-6">
-                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex-1 max-w-md flex items-center">
-                    <Search size={20} className="text-slate-400 mr-3" />
-                    <input
-                        type="text"
-                        placeholder="Search by medicine or supplier..."
-                        className="outline-none w-full text-slate-600 placeholder:text-slate-400"
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <select
-                    className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 outline-none text-slate-600 font-medium"
-                    value={filterStatus}
-                    onChange={e => setFilterStatus(e.target.value)}
-                >
-                    <option value="All">All Status</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Sent to Supplier">Sent to Supplier</option>
-                    <option value="Received">Received</option>
-                    <option value="Cancelled">Cancelled</option>
-                </select>
-            </div>
+            <Row className="mb-4 g-3">
+                <Col lg={4} md={6}>
+                    <InputGroup className="shadow-sm rounded-3 overflow-hidden">
+                        <InputGroup.Text className="bg-white border-0">
+                            <i className="bi bi-search text-muted"></i>
+                        </InputGroup.Text>
+                        <Form.Control
+                            placeholder="Identify medicine or supplier..."
+                            className="border-0 shadow-none py-2 fw-medium"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                        />
+                    </InputGroup>
+                </Col>
+                <Col lg={2} md={6}>
+                    <Form.Select
+                        className="shadow-sm border-0 rounded-3 py-2 fw-bold text-muted cursor-pointer shadow-none"
+                        value={filterStatus}
+                        onChange={e => setFilterStatus(e.target.value)}
+                    >
+                        <option value="All">All Pipelines</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Sent to Supplier">Dispatched</option>
+                        <option value="Received">Reconciled</option>
+                        <option value="Cancelled">Terminated</option>
+                    </Form.Select>
+                </Col>
+            </Row>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pb-10">
+            <Row className="g-4">
                 {loading ? (
-                    <div className="col-span-full text-center py-10 text-slate-400">Loading supply requests...</div>
+                    <Col xs={12} className="text-center py-5">
+                        <Spinner animation="border" variant="primary" />
+                        <p className="mt-3 text-muted fw-medium">Syncing with global logistics...</p>
+                    </Col>
                 ) : filteredRequests.length === 0 ? (
-                    <div className="col-span-full text-center py-10 text-slate-400">No supply requests found.</div>
+                    <Col xs={12}>
+                        <Card className="border-0 shadow-sm rounded-4 text-center py-5 bg-white border border-dashed">
+                            <Card.Body>
+                                <i className="bi bi-diagram-3 fs-1 text-muted opacity-25 d-block mb-3"></i>
+                                <h5 className="fw-bold text-muted">No Pipeline Data Found</h5>
+                            </Card.Body>
+                        </Card>
+                    </Col>
                 ) : (
-                    filteredRequests.map(req => (
-                        <div key={req._id} className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 hover:shadow-xl transition duration-300 flex flex-col">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex flex-col">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase border w-max mb-3 flex items-center gap-1.5 ${getStatusStyle(req.status)}`}>
-                                        <StatusIcon status={req.status} /> {req.status}
-                                    </span>
-                                    <h3 className="font-bold text-slate-800 text-lg leading-tight">{req.medicine?.name || 'Unknown Medicine'}</h3>
-                                    <p className="text-sm font-medium text-slate-500 mt-1">Qty: <span className="text-indigo-600 font-bold">{req.quantity}</span></p>
-                                </div>
-                            </div>
+                    filteredRequests.map(req => {
+                        const style = getStatusConfig(req.status);
+                        return (
+                            <Col key={req._id} xl={4} lg={6}>
+                                <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden hover-lift transition">
+                                    <Card.Body className="p-4 d-flex flex-column">
+                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                            <Badge bg={style.bg} text={style.text} className="px-3 py-2 rounded-pill fw-bold border border-white shadow-sm">
+                                                <i className={`bi ${style.icon} me-1`}></i> {req.status}
+                                            </Badge>
+                                            <div className="text-muted xxs fw-bold uppercase letter-spacing-1">REF: {req._id.slice(-6).toUpperCase()}</div>
+                                        </div>
 
-                            <div className="bg-slate-50 rounded-xl p-4 mb-4 text-sm flex-1">
-                                <div className="mb-2">
-                                    <span className="text-slate-400 block text-xs uppercase font-semibold">Supplier</span>
-                                    <span className="text-slate-700 font-medium">{req.supplier?.name || 'Unknown Supplier'}</span>
-                                </div>
-                                <div className="mb-2">
-                                    <span className="text-slate-400 block text-xs uppercase font-semibold">Expected Date</span>
-                                    <span className="text-slate-700">{req.expectedDate ? new Date(req.expectedDate).toLocaleDateString() : 'Not set'}</span>
-                                </div>
-                                {req.notes && (
-                                    <div className="mt-3 pt-3 border-t border-slate-200">
-                                        <p className="text-slate-500 italic">"{req.notes}"</p>
-                                    </div>
-                                )}
-                            </div>
+                                        <div className="mb-4">
+                                            <h5 className="fw-black text-dark mb-1">{req.medicine?.name || 'Unidentified Compound'}</h5>
+                                            <div className="d-flex align-items-center">
+                                                <Badge bg="primary" className="rounded-pill px-2 py-1 me-2">QTY: {req.quantity}</Badge>
+                                                <small className="text-muted fw-bold">RESOURCE UNIT</small>
+                                            </div>
+                                        </div>
 
-                            <div className="flex justify-end gap-2 mt-auto pt-2">
-                                {req.status === 'Pending' && (
-                                    <button onClick={() => updateStatus(req._id, 'Sent to Supplier')} className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-medium hover:bg-blue-100 transition w-full text-sm">
-                                        Mark Sent
-                                    </button>
-                                )}
-                                {req.status === 'Sent to Supplier' && (
-                                    <button onClick={() => updateStatus(req._id, 'Received')} className="px-4 py-2 bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20 font-medium hover:bg-emerald-600 transition w-full flex items-center justify-center gap-2 text-sm">
-                                        <Package size={16} /> Mark Received
-                                    </button>
-                                )}
-                                {(req.status === 'Pending' || req.status === 'Sent to Supplier') && (
-                                    <button onClick={() => updateStatus(req._id, 'Cancelled')} className="p-2 border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 rounded-xl transition" title="Cancel Request">
-                                        <X size={18} />
-                                    </button>
-                                )}
-                                {req.status === 'Received' && (
-                                    <div className="w-full text-center py-2 text-sm font-semibold text-emerald-600 flex items-center justify-center gap-1">
-                                        <CheckCircle size={16} /> Stock Updated
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))
+                                        <Card className="bg-light border-0 rounded-4 p-3 mb-4 flex-grow-1 border border-primary border-opacity-10">
+                                            <Row className="g-2">
+                                                <Col xs={6}>
+                                                    <label className="xxs fw-bold text-muted text-uppercase mb-1 d-block">SUPPLIER ENTITY</label>
+                                                    <p className="text-dark fw-bold small mb-0 lh-sm">{req.supplier?.name || 'Local Warehouse'}</p>
+                                                </Col>
+                                                <Col xs={6}>
+                                                    <label className="xxs fw-bold text-muted text-uppercase mb-1 d-block">EXPECTED ARRIVAL</label>
+                                                    <p className="text-dark fw-bold small mb-0 lh-sm">
+                                                        {req.expectedDate ? new Date(req.expectedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'TBD'}
+                                                    </p>
+                                                </Col>
+                                            </Row>
+                                        </Card>
+
+                                        {req.notes && (
+                                            <div className="bg-info bg-opacity-10 rounded-3 p-3 mb-4 border border-info border-opacity-25">
+                                                <p className="text-info small mb-0 fw-medium italic text-muted">"{req.notes}"</p>
+                                            </div>
+                                        )}
+
+                                        <div className="mt-auto d-flex gap-2 pt-3 border-top border-light">
+                                            {req.status === 'Pending' && (
+                                                <Button onClick={() => updateStatus(req._id, 'Sent to Supplier')} variant="primary" className="flex-grow-1 py-2 rounded-3 fw-bold shadow-sm">
+                                                    Initialize Dispatch
+                                                </Button>
+                                            )}
+                                            {req.status === 'Sent to Supplier' && (
+                                                <Button onClick={() => updateStatus(req._id, 'Received')} variant="success" className="flex-grow-1 py-2 rounded-3 fw-bold shadow-sm">
+                                                    Confirm Intake
+                                                </Button>
+                                            )}
+                                            {(req.status === 'Pending' || req.status === 'Sent to Supplier') && (
+                                                <Button onClick={() => updateStatus(req._id, 'Cancelled')} variant="outline-danger" className="rounded-3 px-3 border-0 shadow-none">
+                                                    <i className="bi bi-x-lg"></i>
+                                                </Button>
+                                            )}
+                                            {req.status === 'Received' && (
+                                                <div className="w-100 text-center bg-success bg-opacity-10 py-2 rounded-3 border border-success border-opacity-25">
+                                                    <div className="text-success fw-bold small">
+                                                        <i className="bi bi-shield-check me-2"></i> INVENTORY RECONCILED
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        );
+                    })
                 )}
-            </div>
+            </Row>
 
             {showModal && (
                 <SupplyRequestModal
@@ -177,7 +201,7 @@ const SupplyChain = () => {
                     onSuccess={fetchRequests}
                 />
             )}
-        </div>
+        </Container>
     );
 };
 

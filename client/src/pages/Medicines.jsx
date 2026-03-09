@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../api-request/config';
 import useAuth from '../hooks/useAuth';
-import { Plus, Edit, Trash, Search, LayoutGrid, List as ListIcon, Upload, ImageIcon } from 'lucide-react';
+import { Modal, Button, Form, Table, Card, Spinner, Row, Col, Badge, InputGroup } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import ViewMedicineModal from '../components/ViewMedicineModal';
 
 const Medicines = () => {
     const { user } = useAuth();
-    // ... (state remains same)
     const [medicines, setMedicines] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
-    const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid'
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [viewMode, setViewMode] = useState('list');
     const [selectedMedicine, setSelectedMedicine] = useState(null);
     const [formData, setFormData] = useState({
         name: '', batchNumber: '', expiryDate: '', price: '', quantity: '', manufacturer: '', imageUrl: ''
@@ -19,32 +18,32 @@ const Medicines = () => {
     const [uploading, setUploading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const config = { headers: { Authorization: `Bearer ${user?.token}` } };
-
     useEffect(() => {
-        if (user?.token && medicines.length === 0) fetchMedicines();
+        if (user?.token) fetchMedicines();
     }, [user]);
 
     const fetchMedicines = async () => {
+        setLoading(true);
         try {
-            const { data } = await axios.get('http://localhost:5001/api/medicines', config);
+            const { data } = await apiClient.get('/medicines');
             setMedicines(data);
-            setLoading(false);
         } catch (error) {
-            console.error(error);
+            console.error('Inventory sync error:', error);
+            toast.error('Failed to rationalize inventory nodes');
+        } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async (e, id) => {
         e.stopPropagation();
-        if (window.confirm('Are you sure you want to delete this medicine?')) {
+        if (window.confirm('Are you sure you want to terminate this inventory node?')) {
             try {
-                await axios.delete(`http://localhost:5001/api/medicines/${id}`, config);
-                toast.success('Medicine deleted successfully');
+                await apiClient.delete(`/medicines/${id}`);
+                toast.success('Inventory node successfully purged');
                 fetchMedicines();
             } catch (error) {
-                toast.error('Failed to delete medicine');
+                toast.error('Termination sequence interrupted');
             }
         }
     };
@@ -58,32 +57,28 @@ const Medicines = () => {
         setUploading(true);
 
         try {
-            const { data } = await axios.post('http://localhost:5001/api/upload', fd, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${user?.token}`
-                },
+            const { data } = await apiClient.post('/upload', fd, {
+                headers: { 'Content-Type': 'multipart/form-data' },
             });
             setFormData({ ...formData, imageUrl: data });
-            setUploading(false);
-            toast.success('Image uploaded successfully');
+            toast.success('Visual artifact successfully uploaded');
         } catch (error) {
-            console.error('Upload Error:', error);
+            toast.error('Artifact transmission failed');
+        } finally {
             setUploading(false);
-            toast.error(error.response?.data?.message || 'Image upload failed. Is server running?');
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5001/api/medicines', formData, config);
-            setShowModal(false);
-            toast.success('Medicine added successfully');
+            await apiClient.post('/medicines', formData);
+            setShowAddModal(false);
+            toast.success('New pharmaceutical identity established');
             fetchMedicines();
             setFormData({ name: '', batchNumber: '', expiryDate: '', price: '', quantity: '', manufacturer: '', imageUrl: '' });
         } catch (error) {
-            toast.error('Error saving medicine');
+            toast.error('Protocol failure during establishing node');
         }
     };
 
@@ -93,215 +88,269 @@ const Medicines = () => {
     );
 
     return (
-        <div className="p-6 h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6">
+        <div className="container-fluid">
+            <div className="d-flex flex-wrap justify-content-between align-items-end mb-5 gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Medicines</h1>
-                    <p className="text-gray-500">Manage medicine inventory</p>
+                    <h1 className="fw-black text-dark m-0 letter-spacing-n1">Inventory Logic</h1>
+                    <p className="text-muted fw-bold small m-0 uppercase opacity-75">Pharmaceutical Asset & Stock Management</p>
                 </div>
-                <div className="flex gap-4">
-                    <div className="bg-white border rounded-lg p-1 flex">
-                        <button
+                <div className="d-flex gap-3">
+                    <div className="bg-white border rounded-4 shadow-sm p-1 d-flex">
+                        <Button
+                            variant={viewMode === 'list' ? 'primary' : 'link'}
+                            className={`rounded-3 border-0 px-3 py-2 ${viewMode === 'list' ? 'shadow-primary text-white' : 'text-muted'}`}
                             onClick={() => setViewMode('list')}
-                            className={`p-2 rounded ${viewMode === 'list' ? 'bg-gray-100 text-primary' : 'text-gray-400 hover:text-gray-600'}`}
                         >
-                            <ListIcon size={20} />
-                        </button>
-                        <button
+                            <i className="bi bi-list-ul"></i>
+                        </Button>
+                        <Button
+                            variant={viewMode === 'grid' ? 'primary' : 'link'}
+                            className={`rounded-3 border-0 px-3 py-2 ${viewMode === 'grid' ? 'shadow-primary text-white' : 'text-muted'}`}
                             onClick={() => setViewMode('grid')}
-                            className={`p-2 rounded ${viewMode === 'grid' ? 'bg-gray-100 text-primary' : 'text-gray-400 hover:text-gray-600'}`}
                         >
-                            <LayoutGrid size={20} />
-                        </button>
+                            <i className="bi bi-grid-fill"></i>
+                        </Button>
                     </div>
-                    <button
-                        onClick={() => setShowModal(true)}
-                        className="bg-primary text-white px-4 py-2 rounded-lg flex items-center hover:bg-teal-800 transition shadow-sm"
+                    <Button
+                        variant="dark"
+                        className="shadow-lg rounded-4 d-flex align-items-center px-4 py-3 fw-black border-0 transition hover-lift text-uppercase letter-spacing-1"
+                        onClick={() => setShowAddModal(true)}
+                        style={{ background: 'linear-gradient(45deg, #212529, #343a40)' }}
                     >
-                        <Plus size={18} className="mr-2" /> Add Medicine
-                    </button>
+                        <i className="bi bi-plus-lg me-2 fs-5"></i> Establish Node
+                    </Button>
                 </div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
-                <div className="flex items-center border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition">
-                    <Search size={18} className="text-gray-400 mr-2" />
-                    <input
-                        type="text"
-                        placeholder="Search by name or batch..."
-                        className="outline-none w-full"
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                    />
-                </div>
-            </div>
+            <Row className="mb-5">
+                <Col md={6} lg={4}>
+                    <InputGroup className="bg-white border rounded-4 shadow-sm overflow-hidden p-1">
+                        <InputGroup.Text className="bg-transparent border-0 pe-0 ms-2">
+                            <i className="bi bi-search text-muted"></i>
+                        </InputGroup.Text>
+                        <Form.Control
+                            placeholder="Identify node by appellation or batch..."
+                            className="bg-transparent border-0 py-2 ms-0 shadow-none fw-bold small"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                        />
+                    </InputGroup>
+                </Col>
+            </Row>
 
-            <div className="flex-1 overflow-y-auto">
-                {loading ? (
-                    <div className="text-center py-10 text-gray-500">Loading...</div>
-                ) : filteredMedicines.length === 0 ? (
-                    <div className="text-center py-10 text-gray-500">No medicines found.</div>
-                ) : viewMode === 'list' ? (
-                    // LIST VIEW
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead className="bg-gray-50 border-b border-gray-200">
-                                    <tr>
-                                        <th className="p-4 font-semibold text-gray-600 text-sm uppercase w-16">Image</th>
-                                        <th className="p-4 font-semibold text-gray-600 text-sm uppercase">Name</th>
-                                        <th className="p-4 font-semibold text-gray-600 text-sm uppercase">Batch</th>
-                                        <th className="p-4 font-semibold text-gray-600 text-sm uppercase">Expiry</th>
-                                        <th className="p-4 font-semibold text-gray-600 text-sm uppercase">Price</th>
-                                        <th className="p-4 font-semibold text-gray-600 text-sm uppercase">Stock</th>
-                                        <th className="p-4 font-semibold text-gray-600 text-sm uppercase text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {filteredMedicines.map((med) => (
-                                        <tr
-                                            key={med._id}
-                                            className="hover:bg-gray-50 transition cursor-pointer"
-                                            onClick={() => setSelectedMedicine(med)}
+            {loading ? (
+                <div className="text-center py-5">
+                    <Spinner animation="grow" variant="primary" />
+                    <p className="mt-3 xxs fw-black text-muted text-uppercase letter-spacing-1">Synchronizing Inventory Matrix...</p>
+                </div>
+            ) : filteredMedicines.length === 0 ? (
+                <Card className="border-0 shadow-sm rounded-5 py-5 text-center bg-white border">
+                    <i className="bi bi-box-seam display-1 text-muted opacity-10 mb-3"></i>
+                    <h4 className="fw-black text-muted">No Nodes Isolated</h4>
+                    <p className="text-muted small uppercase fw-bold letter-spacing-1">The inventory matrix is currently depleted</p>
+                </Card>
+            ) : viewMode === 'list' ? (
+                <Card className="border-0 shadow-sm rounded-5 overflow-hidden bg-white border">
+                    <Table hover responsive className="mb-0 align-middle">
+                        <thead className="bg-light border-bottom">
+                            <tr>
+                                <th className="ps-4 py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Visual ID</th>
+                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Appellation & Batch</th>
+                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Expiry Protocol</th>
+                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Unit Compensation</th>
+                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Volume Status</th>
+                                <th className="pe-4 py-4 text-muted xxs fw-black text-uppercase letter-spacing-1 text-end">Operations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredMedicines.map((med) => (
+                                <tr
+                                    key={med._id}
+                                    className="transition border-bottom border-light cursor-pointer"
+                                    onClick={() => setSelectedMedicine(med)}
+                                >
+                                    <td className="ps-4 py-4">
+                                        <div className="rounded-4 bg-light d-flex align-items-center justify-content-center overflow-hidden border shadow-inner" style={{ width: '64px', height: '64px' }}>
+                                            {med.imageUrl ? (
+                                                <img
+                                                    src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5001${med.imageUrl}`}
+                                                    alt={med.name}
+                                                    className="w-100 h-100 object-cover"
+                                                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.classList.remove('d-none'); }}
+                                                />
+                                            ) : null}
+                                            <i className={`bi bi-image text-muted fs-4 opacity-50 ${med.imageUrl ? 'd-none' : ''}`}></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="fw-black text-dark fs-6 mb-0">{med.name}</div>
+                                        <small className="text-muted fw-bold xxs text-uppercase letter-spacing-1">Batch: {med.batchNumber}</small>
+                                    </td>
+                                    <td>
+                                        <Badge bg="light" text="dark" className="border px-3 py-2 rounded-4 fw-bold xxs text-uppercase letter-spacing-1 shadow-sm">
+                                            {new Date(med.expiryDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                                        </Badge>
+                                    </td>
+                                    <td>
+                                        <span className="fw-black text-primary">${med.price.toFixed(2)}</span>
+                                    </td>
+                                    <td>
+                                        <Badge
+                                            bg={med.quantity < 10 ? 'danger' : 'success'}
+                                            className={`rounded-pill px-3 py-2 fw-black xxs text-uppercase letter-spacing-1 shadow-sm ${med.quantity < 10 ? 'bg-opacity-10 text-danger border border-danger border-opacity-25' : 'bg-opacity-10 text-success border border-success border-opacity-25'}`}
                                         >
-                                            <td className="p-4">
-                                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border">
-                                                    {med.imageUrl ? (
-                                                        <img
-                                                            src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5001${med.imageUrl}`}
-                                                            alt={med.name}
-                                                            className="w-full h-full object-cover"
-                                                            loading="lazy"
-                                                            onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
-                                                        />
-                                                    ) : null}
-                                                    <ImageIcon size={18} className={`text-gray-400 ${med.imageUrl ? 'hidden' : ''}`} />
-                                                </div>
-                                            </td>
-                                            <td className="p-4 font-medium text-gray-800">{med.name}</td>
-                                            <td className="p-4 text-gray-600">{med.batchNumber}</td>
-                                            <td className="p-4 text-gray-600">{new Date(med.expiryDate).toLocaleDateString()}</td>
-                                            <td className="p-4 text-gray-800 font-medium">${med.price}</td>
-                                            <td className="p-4">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold ${med.quantity < 10 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                                                    {med.quantity}
-                                                </span>
-                                            </td>
-                                            <td className="p-4 text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <button onClick={(e) => { e.stopPropagation(); /* Edit logic */ }} className="text-blue-500 hover:text-blue-700 p-1 hover:bg-blue-50 rounded"><Edit size={18} /></button>
-                                                    {user.role === 'admin' && (
-                                                        <button onClick={(e) => handleDelete(e, med._id)} className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded"><Trash size={18} /></button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                ) : (
-                    // GRID VIEW
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredMedicines.map((med) => (
-                            <div
-                                key={med._id}
-                                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition cursor-pointer flex flex-col group"
-                                onClick={() => setSelectedMedicine(med)}
-                            >
-                                <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden relative">
+                                            {med.quantity} Units Available
+                                        </Badge>
+                                    </td>
+                                    <td className="pe-4 text-end">
+                                        <div className="d-flex justify-content-end gap-2">
+                                            <Button variant="outline-dark" size="sm" className="rounded-4 fw-black xxs text-uppercase letter-spacing-1 border-2 py-2 px-3" onClick={(e) => { e.stopPropagation(); /* Edit logic */ }}>
+                                                Modify
+                                            </Button>
+                                            {user.role === 'admin' && (
+                                                <Button variant="outline-danger" size="sm" className="rounded-4 fw-black xxs text-uppercase letter-spacing-1 border-2 py-2 px-2" onClick={(e) => handleDelete(e, med._id)}>
+                                                    <i className="bi bi-trash"></i>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                </Card>
+            ) : (
+                <Row className="g-4">
+                    {filteredMedicines.map((med) => (
+                        <Col key={med._id} xs={12} sm={6} lg={4} xl={3}>
+                            <Card className="border-0 shadow-sm rounded-5 h-100 overflow-hidden hover-card transition bg-white border" onClick={() => setSelectedMedicine(med)}>
+                                <div className="position-relative bg-light overflow-hidden shadow-inner" style={{ height: '220px' }}>
                                     {med.imageUrl ? (
                                         <img
                                             src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5001${med.imageUrl}`}
                                             alt={med.name}
-                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                            loading="lazy"
-                                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150?text=No+Image'; }}
+                                            className="w-100 h-100 object-cover transition-slow"
                                         />
                                     ) : (
-                                        <ImageIcon size={48} className="text-gray-300" />
-                                    )}
-                                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-bold shadow-sm">
-                                        ${med.price}
-                                    </div>
-                                </div>
-                                <div className="p-4 flex-1 flex flex-col">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="font-bold text-gray-800 text-lg line-clamp-1">{med.name}</h3>
-                                        <span className={`px-2 py-0.5 rounded text-xs font-semibold whitespace-nowrap ml-2 ${med.quantity < 10 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                                            {med.quantity} left
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mb-4">Batch: {med.batchNumber}</p>
-
-                                    <div className="mt-auto flex justify-end gap-2 pt-3 border-t">
-                                        <button onClick={(e) => { e.stopPropagation(); /* Edit logic */ }} className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><Edit size={18} /></button>
-                                        <button onClick={(e) => handleDelete(e, med._id)} className="text-red-500 hover:bg-red-50 p-2 rounded-full transition"><Trash size={18} /></button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-gray-800">Add Medicine</h2>
-                            <button type="button" onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><Trash size={20} className="hidden" />X</button>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* Image Upload */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Medicine Image</label>
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition cursor-pointer relative">
-                                    <input
-                                        type="file"
-                                        onChange={uploadFileHandler}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    />
-                                    {formData.imageUrl ? (
-                                        <div className="relative h-32 w-full">
-                                            <img src={`http://localhost:5001${formData.imageUrl}`} alt="Preview" className="h-full w-full object-contain mx-auto" />
-                                            {uploading && <div className="absolute inset-0 bg-white/50 flex items-center justify-center">Uploading...</div>}
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center py-4">
-                                            <Upload className="text-gray-400 mb-2" size={32} />
-                                            <p className="text-sm text-gray-500">{uploading ? 'Uploading...' : 'Click to upload or drag and drop'}</p>
+                                        <div className="w-100 h-100 d-flex align-items-center justify-content-center opacity-25">
+                                            <i className="bi bi-image display-4 text-muted"></i>
                                         </div>
                                     )}
+                                    <div className="position-absolute top-0 end-0 m-3 px-3 py-2 bg-white shadow-lg rounded-pill fw-black text-primary xxs letter-spacing-1">
+                                        ${med.price.toFixed(2)}
+                                    </div>
+                                    <div className="position-absolute bottom-0 start-0 m-3">
+                                        <Badge bg={med.quantity < 10 ? 'danger' : 'success'} className="rounded-pill px-3 py-2 fw-black xxs text-uppercase letter-spacing-1 shadow-lg">
+                                            {med.quantity} Stocked
+                                        </Badge>
+                                    </div>
                                 </div>
-                                <div className="mt-2 text-center text-xs text-gray-400">OR</div>
-                                <input
-                                    className="w-full border p-2 mt-2 rounded-lg text-sm"
-                                    placeholder="Paste Image URL"
-                                    value={formData.imageUrl}
-                                    onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
-                                />
-                            </div>
+                                <Card.Body className="p-4">
+                                    <div className="mb-4">
+                                        <h5 className="fw-black text-dark mb-1 text-truncate">{med.name}</h5>
+                                        <p className="text-muted fw-bold xxs uppercase letter-spacing-1 mb-0 opacity-75">Ref: {med.batchNumber}</p>
+                                    </div>
 
-                            <input className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-primary outline-none" placeholder="Name" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-                            <input className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-primary outline-none" placeholder="Batch Number" required value={formData.batchNumber} onChange={e => setFormData({ ...formData, batchNumber: e.target.value })} />
-                            <input className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-primary outline-none" type="date" required value={formData.expiryDate} onChange={e => setFormData({ ...formData, expiryDate: e.target.value })} />
-                            <div className="flex gap-2">
-                                <input className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-primary outline-none" type="number" placeholder="Price" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
-                                <input className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-primary outline-none" type="number" placeholder="Quantity" required value={formData.quantity} onChange={e => setFormData({ ...formData, quantity: e.target.value })} />
-                            </div>
-                            <input className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-primary outline-none" placeholder="Manufacturer" value={formData.manufacturer} onChange={e => setFormData({ ...formData, manufacturer: e.target.value })} />
+                                    <div className="bg-light rounded-4 p-3 mb-4 text-start border border-dashed">
+                                        <div className="d-flex justify-content-between align-items-center mb-1">
+                                            <span className="xxs fw-bold text-muted uppercase">Manufacturer</span>
+                                            <span className="fw-bold text-dark xxs">{med.manufacturer || 'Unknown'}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between align-items-center">
+                                            <span className="xxs fw-bold text-muted uppercase">Expiry</span>
+                                            <span className="fw-bold text-dark xxs">{new Date(med.expiryDate).toLocaleDateString()}</span>
+                                        </div>
+                                    </div>
 
-                            <div className="flex justify-end gap-2 pt-2">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-teal-800 transition">Save Medicine</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                                    <div className="d-flex gap-2 pt-2">
+                                        <Button variant="outline-dark" size="sm" className="w-100 rounded-4 fw-black xxs text-uppercase letter-spacing-1 py-2 border-2" onClick={(e) => { e.stopPropagation(); /* Edit logic */ }}>
+                                            Configure
+                                        </Button>
+                                        <Button variant="outline-danger" size="sm" className="rounded-4 fw-black xxs border-2 py-2 px-3" onClick={(e) => handleDelete(e, med._id)}>
+                                            <i className="bi bi-trash"></i>
+                                        </Button>
+                                    </div>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    ))}
+                </Row>
             )}
+
+            {/* Add Medicine Modal */}
+            <Modal show={showAddModal} onHide={() => setShowAddModal(false)} centered size="lg" className="border-0">
+                <Modal.Header closeButton className="border-0 pb-0 px-4 pt-4">
+                    <Modal.Title className="fw-black display-6 text-dark letter-spacing-n1">Establish Node</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="p-4 pt-2">
+                    <p className="text-muted fw-bold small text-uppercase mb-4 letter-spacing-1">Register new inventory asset identity</p>
+                    <Form onSubmit={handleSubmit}>
+                        <Row className="g-4 mb-4">
+                            <Col lg={4}>
+                                <div className="border border-2 border-dashed rounded-5 p-4 text-center bg-light position-relative overflow-hidden h-100 d-flex align-items-center justify-content-center transition shadow-inner">
+                                    <input type="file" className="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer" style={{ zIndex: 10 }} onChange={uploadFileHandler} />
+                                    {formData.imageUrl ? (
+                                        <img src={formData.imageUrl.startsWith('http') ? formData.imageUrl : `http://localhost:5001${formData.imageUrl}`} className="img-fluid rounded-4 shadow-sm" style={{ maxHeight: '180px' }} alt="Preview" />
+                                    ) : (
+                                        <div className="py-2">
+                                            <i className="bi bi-cloud-arrow-up display-4 text-primary opacity-25"></i>
+                                            <p className="text-muted xxs fw-black mt-2 mb-0 uppercase letter-spacing-1">{uploading ? 'Processing...' : 'Upload Image'}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </Col>
+                            <Col lg={8}>
+                                <Row className="g-3">
+                                    <Col md={12}>
+                                        <Form.Group>
+                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Pharmaceutical Appellation</Form.Label>
+                                            <Form.Control required className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={6}>
+                                        <Form.Group>
+                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Batch Identification</Form.Label>
+                                            <Form.Control required className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.batchNumber} onChange={e => setFormData({ ...formData, batchNumber: e.target.value })} />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={6}>
+                                        <Form.Group>
+                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Expiry Protocol Date</Form.Label>
+                                            <Form.Control type="date" required className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.expiryDate} onChange={e => setFormData({ ...formData, expiryDate: e.target.value })} />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={6}>
+                                        <Form.Group>
+                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Market Compensation ($)</Form.Label>
+                                            <Form.Control type="number" step="0.01" required className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={6}>
+                                        <Form.Group>
+                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Inventory Quantity</Form.Label>
+                                            <Form.Control type="number" required className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.quantity} onChange={e => setFormData({ ...formData, quantity: e.target.value })} />
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+                            </Col>
+                        </Row>
+
+                        <Form.Group className="mb-5">
+                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Manufacturing Component</Form.Label>
+                            <Form.Control className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.manufacturer} onChange={e => setFormData({ ...formData, manufacturer: e.target.value })} />
+                        </Form.Group>
+
+                        <div className="d-flex gap-3">
+                            <Button variant="light" className="w-100 py-3 rounded-4 fw-black text-muted uppercase letter-spacing-1 border" onClick={() => setShowAddModal(false)}>
+                                Abort
+                            </Button>
+                            <Button variant="primary" type="submit" className="w-100 py-3 rounded-4 fw-black uppercase letter-spacing-1 shadow-primary border-0">
+                                Authorize Deployment
+                            </Button>
+                        </div>
+                    </Form>
+                </Modal.Body>
+            </Modal>
 
             {selectedMedicine && (
                 <ViewMedicineModal

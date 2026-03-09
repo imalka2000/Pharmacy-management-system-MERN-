@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Pill, Users, ShoppingCart, BarChart3, LogOut, FileText, Truck, Tag, MessageSquare } from 'lucide-react';
 import useAuth from '../hooks/useAuth';
 
 const Sidebar = () => {
@@ -7,73 +6,75 @@ const Sidebar = () => {
     const { logout, user } = useAuth();
 
     const links = [
-        { title: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
-        { title: 'Medicine', path: '/medicines', icon: <Pill size={20} /> },
-        { title: 'Sales', path: '/sales', icon: <ShoppingCart size={20} /> },
-        { title: 'Prescriptions', path: '/prescriptions', icon: <FileText size={20} /> },
-        { title: 'Supply Chain', path: '/supply-chain', icon: <Truck size={20} /> },
-        { title: 'Deliveries', path: '/deliveries', icon: <Truck size={20} />, role: 'admin' },
-        { title: 'Driver Portal', path: '/driver-portal', icon: <Truck size={20} />, role: 'driver' },
-        { title: 'Suppliers', path: '/suppliers', icon: <Users size={20} />, role: 'admin' },
-        { title: 'Employees', path: '/employees', icon: <Users size={20} />, role: 'admin' },
-        { title: 'Users', path: '/users', icon: <Users size={20} />, role: 'admin' },
-        { title: 'Promotions', path: '/promotions', icon: <Tag size={20} /> },
-        { title: 'Feedback', path: '/feedback', icon: <MessageSquare size={20} /> },
-        { title: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, role: 'admin' },
+        { title: 'Command Center', path: '/', icon: 'bi-grid-1x2-fill' },
+        { title: 'Inventory Bank', path: '/medicines', icon: 'bi-capsule' },
+        { title: 'Sales Terminal', path: '/sales', icon: 'bi-receipt-cutoff' },
+        { title: 'Prescriptions', path: '/prescriptions', icon: 'bi-file-earmark-medical' },
+        { title: 'Supply Pipeline', path: '/supply-chain', icon: 'bi-diagram-3-fill' },
+        { title: 'Logistics Control', path: '/deliveries', icon: 'bi-truck', role: 'admin' },
+        { title: 'Mission Portal', path: '/driver-portal', icon: 'bi-scooter', role: 'driver' },
+        { title: 'Supplier Network', path: '/suppliers', icon: 'bi-building-up', role: 'admin' },
+        { title: 'Human Resources', path: '/employees', icon: 'bi-people-fill', role: 'admin' },
+        { title: 'Resident Registry', path: '/users', icon: 'bi-person-badge', role: 'admin' },
+        { title: 'Promotions', path: '/promotions', icon: 'bi-megaphone-fill' },
+        { title: 'Feedback Bank', path: '/feedback', icon: 'bi-chat-dots-fill' },
+        { title: 'Analytics', path: '/reports', icon: 'bi-bar-chart-line-fill', role: 'admin' },
     ];
 
     return (
-        <aside className="h-screen w-72 bg-slate-900 text-white flex flex-col fixed left-0 top-0 border-r border-slate-800 z-50 shadow-xl">
-            <div className="p-6 flex items-center justify-center border-b border-slate-800/50">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-tr from-emerald-400 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                        <span className="font-bold text-white text-lg">P</span>
-                    </div>
-                    <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">PharmaSys</span>
+        <aside className="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark shadow-lg border-end border-opacity-10" style={{ width: '280px', height: '100vh', position: 'fixed', zIndex: 1050 }}>
+            <div className="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none p-3 pb-4">
+                <div className="p-2 rounded-3 bg-primary bg-gradient shadow-sm me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                    <i className="bi bi-shield-plus fs-4"></i>
                 </div>
+                <span className="fs-4 fw-black letter-spacing-1 text-uppercase">Pharma<span className="text-primary">Sys</span></span>
             </div>
 
-            <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-                <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Menu</p>
+            <hr className="bg-light opacity-10 mx-3 mb-4" />
+
+            <ul className="nav nav-pills flex-column mb-auto overflow-y-auto px-2 custom-scrollbar">
+                <li className="nav-item mb-2 ps-2">
+                    <small className="text-uppercase fw-bold text-muted xxs opacity-50 letter-spacing-2">Main Operations</small>
+                </li>
                 {links.map((link) => {
                     if (link.role && user?.role !== link.role) return null;
                     const isActive = pathname === link.path;
 
                     return (
-                        <Link
-                            key={link.path}
-                            to={link.path}
-                            className={`flex items-center px-4 py-3.5 rounded-xl transition-all duration-200 group ${isActive
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 translate-x-1'
-                                : 'text-slate-400 hover:bg-slate-800/50 hover:text-white hover:translate-x-1'
-                                }`}
-                        >
-                            <span className={`mr-3 transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`}>
-                                {link.icon}
-                            </span>
-                            <span className="font-medium">{link.title}</span>
-                            {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
-                        </Link>
+                        <li key={link.path} className="nav-item mb-1">
+                            <Link
+                                to={link.path}
+                                className={`nav-link d-flex align-items-center py-3 px-3 rounded-4 transition-all ${isActive ? 'active bg-primary bg-gradient shadow-lg text-white' : 'text-secondary hover-bg-dark-light'}`}
+                                style={{ border: isActive ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent' }}
+                            >
+                                <i className={`bi ${link.icon} me-3 fs-5 ${isActive ? 'text-white' : 'text-muted'}`}></i>
+                                <span className="fw-bold small">{link.title}</span>
+                                {isActive && <i className="bi bi-circle-fill ms-auto xxs text-white opacity-50 pulse-animation"></i>}
+                            </Link>
+                        </li>
                     );
                 })}
-            </div>
+            </ul>
 
-            <div className="p-4 border-t border-slate-800/50 m-4 bg-slate-800/30 rounded-2xl">
-                <div className="flex items-center gap-3 mb-4 px-2">
-                    <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
-                        {user?.username?.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="overflow-hidden">
-                        <p className="text-sm font-bold text-white truncate">{user?.username}</p>
-                        <p className="text-xs text-slate-500 truncate capitalize">{user?.role}</p>
+            <div className="mt-auto px-2 pb-3">
+                <div className="bg-light bg-opacity-10 rounded-4 p-3 mb-3 border border-white border-opacity-10 overflow-hidden position-relative">
+                    <div className="d-flex align-items-center position-relative" style={{ zIndex: 1 }}>
+                        <div className="rounded-circle bg-primary bg-gradient d-flex align-items-center justify-content-center me-3 border border-dark border-2 shadow-sm" style={{ width: '48px', height: '48px' }}>
+                            <span className="fw-black fs-5 text-white">{user?.username?.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div className="overflow-hidden">
+                            <h6 className="mb-0 text-white fw-black text-truncate">{user?.username}</h6>
+                            <small className="text-primary fw-bold text-uppercase xxs letter-spacing-1">{user?.role}</small>
+                        </div>
                     </div>
                 </div>
+
                 <button
                     onClick={logout}
-                    className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-rose-400 bg-rose-500/10 hover:bg-rose-500 hover:text-white rounded-xl transition-all duration-200"
+                    className="btn btn-outline-danger w-100 py-3 rounded-4 fw-black text-uppercase letter-spacing-2 small d-flex align-items-center justify-content-center transition border-0 hover-lift"
+                    style={{ background: 'rgba(220, 53, 69, 0.05)' }}
                 >
-                    <LogOut size={18} className="mr-2" />
-                    Sign Out
+                    <i className="bi bi-power me-2 fs-5"></i> Terminate Session
                 </button>
             </div>
         </aside>

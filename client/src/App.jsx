@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
+import DefaultLayout from './layout/default-layout';
+import PublicLayout from './layout/public-layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Medicines from './pages/Medicines';
@@ -18,25 +19,28 @@ import useAuth from './hooks/useAuth';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="d-flex justify-content-center align-items-center vh-100">Loading...</div>;
   return user ? children : <Navigate to="/login" />;
 };
 
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route element={<PublicLayout />}>
+        <Route path="/login" element={<Login />} />
+      </Route>
 
       <Route path="/" element={
         <PrivateRoute>
-          <Layout />
+          <DefaultLayout />
         </PrivateRoute>
       }>
         <Route index element={<Dashboard />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="medicines" element={<Medicines />} />
         <Route path="sales" element={<Sales />} />
         <Route path="prescriptions" element={<Prescriptions />} />
-        <Route path="supply-chain" element={<SupplyChain />} />
+        <Route path="supply-requests" element={<SupplyChain />} />
         <Route path="deliveries" element={<Deliveries />} />
         <Route path="driver-portal" element={<DriverPortal />} />
         <Route path="promotions" element={<Promotions />} />

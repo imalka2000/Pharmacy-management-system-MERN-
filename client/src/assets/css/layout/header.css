@@ -1,0 +1,145 @@
+.header {
+  display: block;
+  height: 65px;
+  width: 100%;
+  position: fixed;
+  padding: 0px;
+  z-index: 1040;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e9eaec;
+  margin-bottom: 0px;
+  transition: all 0.2s ease;
+  -webkit-transition: all 0.2s ease;
+  -moz-transition: all 0.2s ease;
+  -o-transition: all 0.2s ease;
+  -ms-transition: all 0.2s ease;
+}
+
+.header .header-container .nav-logo {
+  float: left;
+  width: 270px;
+}
+
+.header .header-container .nav-logo a {
+  color: #ffffff;
+  font-size: 18px;
+  padding-left: 0;
+}
+
+.header .header-container .nav-logo b {
+  height: 60px;
+  display: inline-block;
+  width: 60px;
+  line-height: 60px;
+  text-align: center;
+}
+
+.header .header-container .nav-left, .header .header-container .nav-right {
+  position: relative;
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0px;
+}
+
+
+.header .header-container .nav-left > li, .header .header-container .nav-right > li {
+  float: left;
+}
+
+.header .header-container .nav-left > li > a, .header .header-container .nav-right > li > a {
+  padding: 0 6px;
+  line-height: calc(65px - 3px);
+  min-height: calc(65px - 3px);
+  color: #8a8a8a;
+  display: block;
+  transition: all 0.2s ease-in-out;
+  -webkit-transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  -ms-transition: all 0.2s ease-in-out;
+}
+
+.header .header-container .nav-left > li > a i, .header .header-container .nav-right > li > a i {
+  font-size: 18px;
+  vertical-align: middle;
+  color: #ffffff;
+  border-radius: 50%;
+  border: 1px solid #f1f1f1;
+  padding: 8px;
+  color: #999;
+  transition: all 0.3s ease-in-out;
+  -webkit-transition: all 0.3s ease-in-out;
+  -moz-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  -ms-transition: all 0.3s ease-in-out;
+}
+
+.header .header-container .nav-left > li > a i:hover, .header .header-container .nav-left > li > a i:focus {
+  text-decoration: none;
+  background: #e22a6f;
+  border-color: #e22a6f;
+  color: #fff;
+}
+
+.header .header-container .nav-right > li > a i:hover, .header .header-container .nav-right > li > a i:focus {
+  text-decoration: none;
+  background: #e22a6f;
+  border-color: #e22a6f;
+  color: #fff;
+}
+
+.header .header-container .nav-left > li > a.dropdown-toggle:after, .header .header-container .nav-right > li > a.dropdown-toggle:after {
+  display: none;
+  border-radius: 0px;
+}
+
+.header .header-container .nav-left .user-profile .profile-img, .header .header-container .nav-right .user-profile .profile-img {
+  width: 40px;
+  border-radius: 50%;
+  margin-top: 12px;
+  float: left;
+}
+
+.header .header-container .nav-left .notifications,
+.header .header-container .nav-right .notifications {
+  position: relative;
+}
+
+.header .header-container .nav-left .notifications .counter,
+.header .header-container .nav-right .notifications .counter {
+  position: absolute;
+  right: 4px;
+  top: 7px;
+  background-color: #6fd088;
+  color: #ffffff;
+  padding: 3px 5.5px;
+  border-radius: 50px;
+  line-height: 1;
+  font-size: 10px;
+}
+
+.header .header-container .nav-left .massages .counter,
+.header .header-container .nav-right .massages .counter {
+  position: absolute;
+  right: 4px;
+  top: 7px;
+  background-color: #fd3259;
+  color: #ffffff;
+  padding: 3px 5.5px;
+  border-radius: 50px;
+  line-height: 1;
+  font-size: 10px;
+}
+
+.header .header-container .nav-left {
+  float: left;
+}
+
+.header .header-container .nav-left .navbar-toggler {
+  margin-top: 15px;
+}
+
+.header .header-container .nav-right {
+  float: right;
+  margin-right: 30px;
+}
