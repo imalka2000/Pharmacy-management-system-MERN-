@@ -9,7 +9,7 @@ const Reports = () => {
     useEffect(() => {
         const fetchSales = async () => {
             try {
-                const { data } = await axios.get('http://localhost:5000/api/sales', {
+                const { data } = await axios.get('http://localhost:5001/api/sales', {
                     headers: { Authorization: `Bearer ${user?.token}` }
                 });
                 setSales(data);

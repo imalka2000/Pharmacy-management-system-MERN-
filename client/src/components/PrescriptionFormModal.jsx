@@ -21,8 +21,8 @@ const PrescriptionFormModal = ({ onClose, onSuccess }) => {
         const fetchData = async () => {
             try {
                 const [usersRes, medsRes] = await Promise.all([
-                    axios.get('http://localhost:5000/api/auth/users', config),
-                    axios.get('http://localhost:5000/api/medicines', config)
+                    axios.get('http://localhost:5001/api/auth/users', config),
+                    axios.get('http://localhost:5001/api/medicines', config)
                 ]);
                 setCustomers(usersRes.data.filter(u => u.role === 'user'));
                 setMedicines(medsRes.data);
@@ -61,7 +61,7 @@ const PrescriptionFormModal = ({ onClose, onSuccess }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/prescriptions', formData, config);
+            await axios.post('http://localhost:5001/api/prescriptions', formData, config);
             toast.success('Prescription created');
             onSuccess();
             onClose();

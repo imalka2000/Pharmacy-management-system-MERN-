@@ -20,7 +20,7 @@ const Users = () => {
 
     const fetchUsers = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/auth/users', config);
+            const { data } = await axios.get('http://localhost:5001/api/auth/users', config);
             setUsers(data.filter(u => u.role === 'user')); // Filter only customers
             setLoading(false);
         } catch (error) {
@@ -32,7 +32,7 @@ const Users = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/auth/register', formData, config);
+            await axios.post('http://localhost:5001/api/auth/register', formData, config);
             toast.success('User added successfully');
             setShowModal(false);
             fetchUsers();

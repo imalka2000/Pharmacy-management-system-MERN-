@@ -20,7 +20,7 @@ const Employees = () => {
 
     const fetchEmployees = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/auth/users', config);
+            const { data } = await axios.get('http://localhost:5001/api/auth/users', config);
             setEmployees(data.filter(u => u.role !== 'user')); // Filter staff only
             setLoading(false);
         } catch (error) {
@@ -32,7 +32,7 @@ const Employees = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/auth/register', formData, config);
+            await axios.post('http://localhost:5001/api/auth/register', formData, config);
             toast.success('Employee added successfully');
             setShowModal(false);
             fetchEmployees();

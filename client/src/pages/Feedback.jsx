@@ -25,7 +25,7 @@ const Feedback = () => {
 
     const fetchFeedbacks = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/feedback', config);
+            const { data } = await axios.get('http://localhost:5001/api/feedback', config);
             setFeedbacks(data);
             setLoading(false);
         } catch (error) {
@@ -38,7 +38,7 @@ const Feedback = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await axios.post('http://localhost:5000/api/feedback', formData, config);
+            await axios.post('http://localhost:5001/api/feedback', formData, config);
             toast.success('Thank you for your feedback!');
             setFormData({ rating: 5, comments: '' });
         } catch (error) {
@@ -50,7 +50,7 @@ const Feedback = () => {
 
     const markReviewed = async (id) => {
         try {
-            await axios.put(`http://localhost:5000/api/feedback/${id}/status`, { status: 'Reviewed' }, config);
+            await axios.put(`http://localhost:5001/api/feedback/${id}/status`, { status: 'Reviewed' }, config);
             toast.success('Marked as reviewed');
             fetchFeedbacks();
         } catch (error) {

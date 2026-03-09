@@ -28,7 +28,7 @@ const Deliveries = () => {
 
     const fetchDeliveries = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/deliveries', config);
+            const { data } = await axios.get('http://localhost:5001/api/deliveries', config);
             setDeliveries(data);
             setLoading(false);
         } catch (error) {
@@ -40,8 +40,8 @@ const Deliveries = () => {
     const fetchFormDependencies = async () => {
         try {
             const [usersRes, empRes] = await Promise.all([
-                axios.get('http://localhost:5000/api/auth/users?role=user', config),
-                axios.get('http://localhost:5000/api/auth/users?role=driver', config)
+                axios.get('http://localhost:5001/api/auth/users?role=user', config),
+                axios.get('http://localhost:5001/api/auth/users?role=driver', config)
             ]);
             setCustomers(usersRes.data);
             setDrivers(empRes.data);
@@ -53,7 +53,7 @@ const Deliveries = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/deliveries', formData, config);
+            await axios.post('http://localhost:5001/api/deliveries', formData, config);
             toast.success('Delivery assigned successfully!');
             setShowModal(false);
             setFormData({ driver: '', customer: '', address: '', notes: '' });

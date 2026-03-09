@@ -21,7 +21,7 @@ const SupplyChain = () => {
 
     const fetchRequests = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/supply-requests', config);
+            const { data } = await axios.get('http://localhost:5001/api/supply-requests', config);
             setRequests(data);
             setLoading(false);
         } catch (error) {
@@ -33,7 +33,7 @@ const SupplyChain = () => {
 
     const updateStatus = async (id, status) => {
         try {
-            await axios.put(`http://localhost:5000/api/supply-requests/${id}/status`, { status }, config);
+            await axios.put(`http://localhost:5001/api/supply-requests/${id}/status`, { status }, config);
             toast.success(`Request marked as ${status}`);
             if (status === 'Received') {
                 toast.success('Inventory stock updated automatically'); // Highlight core feature

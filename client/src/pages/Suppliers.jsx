@@ -18,7 +18,7 @@ const Suppliers = () => {
 
     const fetchSuppliers = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/suppliers', config);
+            const { data } = await axios.get('http://localhost:5001/api/suppliers', config);
             setSuppliers(data);
         } catch (e) { console.error(e); }
     };
@@ -27,7 +27,7 @@ const Suppliers = () => {
         e.stopPropagation(); // Prevent row click
         if (window.confirm('Delete Supplier?')) {
             try {
-                await axios.delete(`http://localhost:5000/api/suppliers/${id}`, config);
+                await axios.delete(`http://localhost:5001/api/suppliers/${id}`, config);
                 fetchSuppliers();
             } catch (e) { console.error(e); }
         }

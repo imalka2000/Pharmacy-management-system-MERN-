@@ -16,7 +16,7 @@ const ViewMedicineModal = ({ medicine, onClose }) => {
                 <div className="p-6 space-y-4">
                     {medicine.imageUrl && (
                         <div className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden border mb-4">
-                            <img src={`http://localhost:5000${medicine.imageUrl}`} alt={medicine.name} className="w-full h-full object-contain" />
+                            <img src={`http://localhost:5001${medicine.imageUrl}`} alt={medicine.name} className="w-full h-full object-contain" />
                         </div>
                     )}
 

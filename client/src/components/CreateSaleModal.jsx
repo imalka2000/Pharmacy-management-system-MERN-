@@ -46,7 +46,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
     const handleCheckout = async () => {
         if (cart.length === 0) return;
         try {
-            await axios.post('http://localhost:5000/api/sales', { items: cart, tax: 0, discount: 0 }, config);
+            await axios.post('http://localhost:5001/api/sales', { items: cart, tax: 0, discount: 0 }, config);
             toast.success('Sale Successful');
             setCart([]);
             onSuccess();

@@ -12,7 +12,7 @@ const AddSupplierModal = ({ onClose, onSuccess }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/suppliers', formData, config);
+            await axios.post('http://localhost:5001/api/suppliers', formData, config);
             toast.success('Supplier added successfully');
             onSuccess();
             onClose();

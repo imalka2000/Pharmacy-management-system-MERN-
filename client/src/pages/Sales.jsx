@@ -20,7 +20,7 @@ const Sales = () => {
         if (!user?.token) return;
         try {
             // setLoading(true); // Removing this might avoid 'loading' flicker loops if effect depends on it (it doesn't here but safe practice)
-            const { data } = await axios.get('http://localhost:5000/api/sales', config);
+            const { data } = await axios.get('http://localhost:5001/api/sales', config);
             setSales(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         } catch (error) {
             console.error(error);

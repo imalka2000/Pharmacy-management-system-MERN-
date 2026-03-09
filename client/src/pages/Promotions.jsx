@@ -27,7 +27,7 @@ const Promotions = () => {
 
     const fetchPromotions = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/promotions', config);
+            const { data } = await axios.get('http://localhost:5001/api/promotions', config);
             setPromotions(data);
             setLoading(false);
         } catch (error) {
@@ -39,7 +39,7 @@ const Promotions = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/promotions', formData, config);
+            await axios.post('http://localhost:5001/api/promotions', formData, config);
             toast.success('Promotion created successfully');
             setShowModal(false);
             setFormData({ title: '', description: '', discountPercentage: '', startDate: '', endDate: '' });
@@ -52,7 +52,7 @@ const Promotions = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this promotion?')) {
             try {
-                await axios.delete(`http://localhost:5000/api/promotions/${id}`, config);
+                await axios.delete(`http://localhost:5001/api/promotions/${id}`, config);
                 toast.success('Promotion deleted');
                 fetchPromotions();
             } catch (error) {

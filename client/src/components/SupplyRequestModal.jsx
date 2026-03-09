@@ -23,8 +23,8 @@ const SupplyRequestModal = ({ onClose, onSuccess }) => {
         const fetchData = async () => {
             try {
                 const [medsRes, suppRes] = await Promise.all([
-                    axios.get('http://localhost:5000/api/medicines', config),
-                    axios.get('http://localhost:5000/api/suppliers', config)
+                    axios.get('http://localhost:5001/api/medicines', config),
+                    axios.get('http://localhost:5001/api/suppliers', config)
                 ]);
                 setMedicines(medsRes.data);
                 setSuppliers(suppRes.data);
@@ -41,7 +41,7 @@ const SupplyRequestModal = ({ onClose, onSuccess }) => {
         try {
             // Need the logged-in user id
             const payload = { ...formData, requestedBy: user._id };
-            await axios.post('http://localhost:5000/api/supply-requests', payload, config);
+            await axios.post('http://localhost:5001/api/supply-requests', payload, config);
             toast.success('Supply request created successfully');
             onSuccess();
             onClose();

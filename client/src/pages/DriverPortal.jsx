@@ -17,7 +17,7 @@ const DriverPortal = () => {
 
     const fetchDeliveries = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/deliveries/my-deliveries', config);
+            const { data } = await axios.get('http://localhost:5001/api/deliveries/my-deliveries', config);
             setDeliveries(data);
             setLoading(false);
         } catch (error) {
@@ -29,7 +29,7 @@ const DriverPortal = () => {
 
     const updateStatus = async (id, status) => {
         try {
-            await axios.put(`http://localhost:5000/api/deliveries/${id}/status`, { status }, config);
+            await axios.put(`http://localhost:5001/api/deliveries/${id}/status`, { status }, config);
             toast.success(`Delivery status updated to ${status}`);
             fetchDeliveries();
         } catch (error) {

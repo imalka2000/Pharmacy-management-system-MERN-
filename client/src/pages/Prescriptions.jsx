@@ -21,7 +21,7 @@ const Prescriptions = () => {
 
     const fetchPrescriptions = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/prescriptions', config);
+            const { data } = await axios.get('http://localhost:5001/api/prescriptions', config);
             setPrescriptions(data);
             setLoading(false);
         } catch (error) {
@@ -32,7 +32,7 @@ const Prescriptions = () => {
 
     const updateStatus = async (id, status) => {
         try {
-            await axios.put(`http://localhost:5000/api/prescriptions/${id}/status`, { status }, config);
+            await axios.put(`http://localhost:5001/api/prescriptions/${id}/status`, { status }, config);
             toast.success(`Status updated to ${status}`);
             fetchPrescriptions();
         } catch (error) {

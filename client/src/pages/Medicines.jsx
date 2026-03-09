@@ -27,7 +27,7 @@ const Medicines = () => {
 
     const fetchMedicines = async () => {
         try {
-            const { data } = await axios.get('http://localhost:5000/api/medicines', config);
+            const { data } = await axios.get('http://localhost:5001/api/medicines', config);
             setMedicines(data);
             setLoading(false);
         } catch (error) {
@@ -40,7 +40,7 @@ const Medicines = () => {
         e.stopPropagation();
         if (window.confirm('Are you sure you want to delete this medicine?')) {
             try {
-                await axios.delete(`http://localhost:5000/api/medicines/${id}`, config);
+                await axios.delete(`http://localhost:5001/api/medicines/${id}`, config);
                 toast.success('Medicine deleted successfully');
                 fetchMedicines();
             } catch (error) {
@@ -58,7 +58,7 @@ const Medicines = () => {
         setUploading(true);
 
         try {
-            const { data } = await axios.post('http://localhost:5000/api/upload', fd, {
+            const { data } = await axios.post('http://localhost:5001/api/upload', fd, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${user?.token}`
@@ -77,7 +77,7 @@ const Medicines = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:5000/api/medicines', formData, config);
+            await axios.post('http://localhost:5001/api/medicines', formData, config);
             setShowModal(false);
             toast.success('Medicine added successfully');
             fetchMedicines();
@@ -168,7 +168,7 @@ const Medicines = () => {
                                                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border">
                                                     {med.imageUrl ? (
                                                         <img
-                                                            src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5000${med.imageUrl}`}
+                                                            src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5001${med.imageUrl}`}
                                                             alt={med.name}
                                                             className="w-full h-full object-cover"
                                                             loading="lazy"
@@ -213,7 +213,7 @@ const Medicines = () => {
                                 <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden relative">
                                     {med.imageUrl ? (
                                         <img
-                                            src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5000${med.imageUrl}`}
+                                            src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5001${med.imageUrl}`}
                                             alt={med.name}
                                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                             loading="lazy"
@@ -266,7 +266,7 @@ const Medicines = () => {
                                     />
                                     {formData.imageUrl ? (
                                         <div className="relative h-32 w-full">
-                                            <img src={`http://localhost:5000${formData.imageUrl}`} alt="Preview" className="h-full w-full object-contain mx-auto" />
+                                            <img src={`http://localhost:5001${formData.imageUrl}`} alt="Preview" className="h-full w-full object-contain mx-auto" />
                                             {uploading && <div className="absolute inset-0 bg-white/50 flex items-center justify-center">Uploading...</div>}
                                         </div>
                                     ) : (
