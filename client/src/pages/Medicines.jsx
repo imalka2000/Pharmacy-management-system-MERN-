@@ -173,7 +173,7 @@ const Medicines = () => {
                                         <div className="rounded-4 bg-light d-flex align-items-center justify-content-center overflow-hidden border shadow-inner" style={{ width: '64px', height: '64px' }}>
                                             {med.imageUrl ? (
                                                 <img
-                                                    src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5001${med.imageUrl}`}
+                                                    src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5005${med.imageUrl}`}
                                                     alt={med.name}
                                                     className="w-100 h-100 object-cover"
                                                     onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.classList.remove('d-none'); }}
@@ -227,7 +227,7 @@ const Medicines = () => {
                                 <div className="position-relative bg-light overflow-hidden shadow-inner" style={{ height: '220px' }}>
                                     {med.imageUrl ? (
                                         <img
-                                            src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5001${med.imageUrl}`}
+                                            src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5005${med.imageUrl}`}
                                             alt={med.name}
                                             className="w-100 h-100 object-cover transition-slow"
                                         />
@@ -290,7 +290,7 @@ const Medicines = () => {
                                 <div className="border border-2 border-dashed rounded-5 p-4 text-center bg-light position-relative overflow-hidden h-100 d-flex align-items-center justify-content-center transition shadow-inner">
                                     <input type="file" className="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer" style={{ zIndex: 10 }} onChange={uploadFileHandler} />
                                     {formData.imageUrl ? (
-                                        <img src={formData.imageUrl.startsWith('http') ? formData.imageUrl : `http://localhost:5001${formData.imageUrl}`} className="img-fluid rounded-4 shadow-sm" style={{ maxHeight: '180px' }} alt="Preview" />
+                                        <img src={formData.imageUrl.startsWith('http') ? formData.imageUrl : `http://localhost:5005${formData.imageUrl}`} className="img-fluid rounded-4 shadow-sm" style={{ maxHeight: '180px' }} alt="Preview" />
                                     ) : (
                                         <div className="py-2">
                                             <i className="bi bi-cloud-arrow-up display-4 text-primary opacity-25"></i>
