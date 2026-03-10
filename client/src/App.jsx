@@ -18,13 +18,27 @@ import Employees from './pages/Employees';
 import Profile from './pages/Profile';
 import useAuth from './hooks/useAuth';
 
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
+  
   if (loading) return <div className="d-flex justify-content-center align-items-center vh-100">Loading...</div>;
-  return user ? children : <Navigate to="/login" />;
+  
+  if (!user) return <Navigate to="/login" />;
+  
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" />; // Redirect to dashboard if not authorized
+  }
+  
+  return children;
 };
 
 function App() {
+  const ROLES = {
+    ADMIN: 'admin',
+    PHARMACIST: 'pharmacist',
+    USER: 'user'
+  };
+
   return (
     <Routes>
       <Route element={<PublicLayout />}>
@@ -38,19 +52,21 @@ function App() {
       }>
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="medicines" element={<Medicines />} />
-        <Route path="sales" element={<Sales />} />
-        <Route path="prescriptions" element={<Prescriptions />} />
-        <Route path="supply-requests" element={<SupplyChain />} />
-        <Route path="deliveries" element={<Deliveries />} />
-        <Route path="driver-portal" element={<DriverPortal />} />
-        <Route path="promotions" element={<Promotions />} />
-        <Route path="feedback" element={<Feedback />} />
-        <Route path="suppliers" element={<Suppliers />} />
-        <Route path="users" element={<Users />} />
-        <Route path="employees" element={<Employees />} />
+        
+        {/* Protected Routes */}
+        <Route path="medicines" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Medicines /></PrivateRoute>} />
+        <Route path="sales" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Sales /></PrivateRoute>} />
+        <Route path="prescriptions" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST, ROLES.USER]}><Prescriptions /></PrivateRoute>} />
+        <Route path="supply-requests" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><SupplyChain /></PrivateRoute>} />
+        <Route path="deliveries" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Deliveries /></PrivateRoute>} />
+        <Route path="driver-portal" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, 'driver']}><DriverPortal /></PrivateRoute>} />
+        <Route path="promotions" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST, ROLES.USER]}><Promotions /></PrivateRoute>} />
+        <Route path="feedback" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST, ROLES.USER]}><Feedback /></PrivateRoute>} />
+        <Route path="suppliers" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Suppliers /></PrivateRoute>} />
+        <Route path="users" element={<PrivateRoute allowedRoles={[ROLES.ADMIN]}><Users /></PrivateRoute>} />
+        <Route path="employees" element={<PrivateRoute allowedRoles={[ROLES.ADMIN]}><Employees /></PrivateRoute>} />
         <Route path="profile" element={<Profile />} />
-        <Route path="reports" element={<Reports />} />
+        <Route path="reports" element={<PrivateRoute allowedRoles={[ROLES.ADMIN]}><Reports /></PrivateRoute>} />
       </Route>
     </Routes>
   );
