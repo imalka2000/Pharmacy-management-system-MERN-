@@ -1,74 +1,60 @@
 import { useContext } from 'react';
 import AuthContext from '../../context/AuthContext';
 import { NavDropdown, Image, Button } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
 function Header({ toggleSidebar }) {
     const { user, logout } = useContext(AuthContext);
 
     return (
-        <div className="header sticky-top bg-white border-bottom shadow-sm py-2 px-4" style={{ zIndex: 1050, height: '70px' }}>
-            <div className="d-flex align-items-center justify-content-between h-100">
+        <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom fixed-top shadow-sm" style={{ height: "56px", zIndex: 1050 }}>
+            <div className="container-fluid">
                 <div className="d-flex align-items-center">
-                    <Button
-                        variant="link"
-                        className="text-dark p-0 me-4 transition hover-lift"
-                        onClick={toggleSidebar}
-                    >
-                        <i className="bi bi-list-nested fs-3"></i>
-                    </Button>
-
-                    <a href="/" className="text-decoration-none d-flex align-items-center">
-                        <div className="bg-primary rounded-circle p-2 me-2 shadow-sm d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                            <i className="bi bi-capsule-pill text-white fs-5"></i>
+                    <Link className="navbar-brand d-flex align-items-center me-4" to="/">
+                        <div className="bg-primary rounded-circle p-1 me-2 d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }}>
+                            <i className="bi bi-capsule-pill text-white fs-6"></i>
                         </div>
-                        <span className="fw-black text-dark fs-4 letter-spacing-n1 m-0 d-none d-sm-block">PharmaCare</span>
-                    </a>
+                        <span className="fw-bold text-primary d-none d-sm-inline">PharmaCare</span>
+                    </Link>
+                    <button className="btn btn-link text-dark p-0 me-3" onClick={toggleSidebar}>
+                        <i className="bi bi-list fs-4"></i>
+                    </button>
                 </div>
 
-                <div className="d-flex align-items-center">
-                    <div className="d-none d-md-flex align-items-center me-4">
-                        <div className="text-end me-3">
-                            <div className="fw-black text-dark small mb-0 fs-6">{user?.name || 'Authorized Operator'}</div>
-                            <div className="xxs fw-bold text-muted text-uppercase letter-spacing-1 opacity-75">{user?.role || 'Pharmacist Officer'}</div>
-                        </div>
-                    </div>
-
+                <div className="d-flex align-items-center ms-auto">
+                    {/* User Profile */}
                     <NavDropdown
                         title={
-                            <div className="d-inline-block p-1 border rounded-circle shadow-sm hover-lift transition">
+                            <div className="d-flex align-items-center">
                                 <Image
+                                    className="rounded-circle border me-2"
                                     src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=0d6efd&color=fff&bold=true`}
-                                    roundedCircle
-                                    style={{ width: '42px', height: '42px' }}
+                                    alt="User"
+                                    width="32"
+                                    height="32"
                                 />
+                                <div className="d-none d-md-block text-start">
+                                    <div className="fw-bold small text-dark leading-none" style={{ lineHeight: 1 }}>{user?.name || 'Authorized Operator'}</div>
+                                    <div className="extra-small text-muted">{user?.role || 'Pharmacist'}</div>
+                                </div>
                             </div>
                         }
                         id="user-dropdown"
                         align="end"
-                        className="no-caret border-0 shadow-2xl"
+                        className="no-caret border-0"
                     >
-                        <div className="px-4 py-3 border-bottom d-md-none">
-                            <div className="fw-black text-dark">{user?.name || 'User'}</div>
-                            <div className="xxs text-muted text-uppercase fw-bold letter-spacing-1">{user?.role || 'Pharmacist'}</div>
-                        </div>
-
-                        <NavDropdown.Item className="py-2 px-4 fw-bold text-muted transition hover-primary small">
-                            <i className="bi bi-person-badge me-2"></i> Security Profile
-                        </NavDropdown.Item>
-                        <NavDropdown.Item className="py-2 px-4 fw-bold text-muted transition hover-primary small">
-                            <i className="bi bi-shield-check me-2"></i> Access Logs
-                        </NavDropdown.Item>
+                        <li className="px-3 py-2 border-bottom border-light">
+                            <div className="fw-bold small">{user?.name}</div>
+                            <div className="text-muted extra-small">{user?.role}</div>
+                        </li>
+                        <NavDropdown.Item as={Link} to="/profile" className="py-2"><i className="bi bi-person me-2"></i> Profile</NavDropdown.Item>
+                        <NavDropdown.Item as={Link} to="/settings" className="py-2"><i className="bi bi-gear me-2"></i> Settings</NavDropdown.Item>
                         <NavDropdown.Divider />
-                        <NavDropdown.Item
-                            onClick={logout}
-                            className="py-2 px-4 fw-black text-danger transition small text-uppercase letter-spacing-1"
-                        >
-                            <i className="bi bi-box-arrow-right me-2"></i> Terminate Session
-                        </NavDropdown.Item>
+                        <NavDropdown.Item onClick={logout} className="py-2 text-danger"><i className="bi bi-box-arrow-right me-2"></i> Logout</NavDropdown.Item>
                     </NavDropdown>
                 </div>
             </div>
-        </div>
+        </nav>
     );
 }
 

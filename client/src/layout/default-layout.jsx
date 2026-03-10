@@ -10,7 +10,7 @@ const DefaultLayout = () => {
     const toggleSidebar = () => setIsOpen(!isOpen);
 
     return (
-        <div className={`app-layout ${isOpen ? "sidebar-open" : "sidebar-folded"}`}>
+        <div className={`app-layout ${!isOpen ? "sidebar-closed" : ""}`}>
             <Toaster
                 position="top-right"
                 reverseOrder={false}
@@ -24,10 +24,10 @@ const DefaultLayout = () => {
                 }}
             />
 
+            <Header toggleSidebar={toggleSidebar} />
             <Nav isOpen={isOpen} />
 
-            <div className="main-wrapper">
-                <Header toggleSidebar={toggleSidebar} />
+            <div className={`main-wrapper ${!isOpen ? "full-width" : ""}`}>
                 <Container />
             </div>
         </div>
