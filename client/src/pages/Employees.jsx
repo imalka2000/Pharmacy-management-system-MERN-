@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../api-request/config';
 import useAuth from '../hooks/useAuth';
-import { Button, Form, Row, Col, Card, Badge, Modal, Spinner, InputGroup } from 'react-bootstrap';
+import { Button, Form, Row, Col, Card, Badge, Modal, Spinner, InputGroup, Image } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 
 const Employees = () => {
@@ -11,6 +11,7 @@ const Employees = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -18,7 +19,8 @@ const Employees = () => {
         fullName: '',
         email: '',
         phone: '',
-        salary: ''
+        salary: '',
+        profileImage: ''
     });
 
     useEffect(() => {
@@ -38,6 +40,26 @@ const Employees = () => {
         }
     };
 
+    const uploadFileHandler = async (e) => {
+        const file = e.target.files[0];
+        const formDataUpload = new FormData();
+        formDataUpload.append('image', file);
+        setUploading(true);
+
+        try {
+            const { data } = await apiClient.post('/upload', formDataUpload, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setFormData({ ...formData, profileImage: data });
+            toast.success('System identifier image uploaded');
+        } catch (error) {
+            console.error(error);
+            toast.error('Image transmission failed');
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
@@ -46,7 +68,7 @@ const Employees = () => {
             toast.success('Personnel record established');
             setShowModal(false);
             fetchEmployees();
-            setFormData({ username: '', password: '', role: 'pharmacist', fullName: '', email: '', phone: '', salary: '' });
+            setFormData({ username: '', password: '', role: 'pharmacist', fullName: '', email: '', phone: '', salary: '', profileImage: '' });
         } catch (error) {
             toast.error(error.response?.data?.message || 'Protocol failure during registration');
         } finally {
@@ -115,6 +137,10 @@ const Employees = () => {
                 <Row className="g-4">
                     {filteredEmployees.map(emp => {
                         const config = getRoleConfig(emp.role);
+                        const empAvatar = emp.profileImage 
+                        ? (emp.profileImage.startsWith('http') ? emp.profileImage : `http://localhost:5000${emp.profileImage}`)
+                        : null;
+
                         return (
                             <Col key={emp._id} md={6} lg={4} xl={3}>
                                 <Card className="border-0 shadow-sm rounded-5 h-100 overflow-hidden hover-lift transition bg-white border">
@@ -124,9 +150,18 @@ const Employees = () => {
                                                 {emp.role}
                                             </Badge>
                                         </div>
-                                        <div className={`bg-white rounded-circle shadow-lg d-flex align-items-center justify-content-center text-${config.bg} fw-black display-6`} style={{ width: '90px', height: '90px', border: `4px solid #fff` }}>
-                                            {emp.fullName?.charAt(0) || emp.username.charAt(0).toUpperCase()}
-                                        </div>
+                                        {empAvatar ? (
+                                            <Image 
+                                                src={empAvatar} 
+                                                roundedCircle 
+                                                className="shadow-lg object-fit-cover bg-white" 
+                                                style={{ width: '90px', height: '90px', border: `4px solid #fff` }}
+                                            />
+                                        ) : (
+                                            <div className={`bg-white rounded-circle shadow-lg d-flex align-items-center justify-content-center text-${config.bg} fw-black display-6`} style={{ width: '90px', height: '90px', border: `4px solid #fff` }}>
+                                                {emp.fullName?.charAt(0) || emp.username.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
                                     </div>
                                     <Card.Body className="p-4 text-center">
                                         <div className="mb-4">
@@ -158,13 +193,30 @@ const Employees = () => {
                 </Row>
             )}
 
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg" className="border-0">
+            <Modal show={showModal} onHide={() => { setShowModal(false); setFormData({...formData, profileImage: ''}); }} centered size="lg" className="border-0">
                 <Modal.Header closeButton className="border-0 pb-0 px-4 pt-4">
                     <Modal.Title className="fw-black display-6 text-dark letter-spacing-n1">Onboard Staff</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="p-4 pt-2">
                     <p className="text-muted fw-bold small text-uppercase mb-4 letter-spacing-1">Establish new system operator profile</p>
                     <Form onSubmit={handleSubmit}>
+                        <div className="text-center mb-4">
+                            <div className="position-relative d-inline-block">
+                                <Image
+                                    src={formData.profileImage ? `http://localhost:5000${formData.profileImage}` : `https://ui-avatars.com/api/?name=User&background=f8f9fa&color=adb5bd&bold=true`}
+                                    roundedCircle
+                                    className="border shadow-sm object-fit-cover"
+                                    width="100"
+                                    height="100"
+                                />
+                                <Form.Label className="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2 shadow-sm cursor-pointer mb-0" style={{ width: '35px', height: '35px', fontSize: '12px' }}>
+                                    <i className="bi bi-camera-fill"></i>
+                                    <Form.Control type="file" className="d-none" onChange={uploadFileHandler} />
+                                </Form.Label>
+                            </div>
+                            {uploading && <div className="mt-2 small fw-bold text-primary">Uploading image...</div>}
+                        </div>
+
                         <Row className="g-4 mb-4">
                             <Col md={6}>
                                 <Form.Group>
@@ -215,7 +267,7 @@ const Employees = () => {
                             <Button variant="light" className="w-100 py-3 rounded-4 fw-black text-muted uppercase letter-spacing-1 border" onClick={() => setShowModal(false)} disabled={submitting}>
                                 Abandon
                             </Button>
-                            <Button variant="primary" type="submit" className="w-100 py-3 rounded-4 fw-black uppercase letter-spacing-1 shadow-primary border-0" disabled={submitting}>
+                            <Button variant="primary" type="submit" className="w-100 py-3 rounded-4 fw-black uppercase letter-spacing-1 shadow-primary border-0" disabled={submitting || uploading}>
                                 {submitting ? 'Processing...' : 'Deploy Profile'}
                             </Button>
                         </div>

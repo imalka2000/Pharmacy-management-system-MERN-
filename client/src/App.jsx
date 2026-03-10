@@ -15,6 +15,7 @@ import Suppliers from './pages/Suppliers';
 import Reports from './pages/Reports';
 import Users from './pages/Users';
 import Employees from './pages/Employees';
+import Profile from './pages/Profile';
 import useAuth from './hooks/useAuth';
 
 const PrivateRoute = ({ children }) => {
@@ -48,6 +49,7 @@ function App() {
         <Route path="suppliers" element={<Suppliers />} />
         <Route path="users" element={<Users />} />
         <Route path="employees" element={<Employees />} />
+        <Route path="profile" element={<Profile />} />
         <Route path="reports" element={<Reports />} />
       </Route>
     </Routes>

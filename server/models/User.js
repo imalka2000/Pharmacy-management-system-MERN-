@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     email: { type: String, unique: true, sparse: true }, // sparse allows null/undefined to not clash uniqueness
     phone: { type: String },
     address: { type: String },
+    profileImage: { type: String },
     salary: { type: Number, default: 0 }, // For employees
     leaves: [{ type: Object }], // For employees
     paymentMethods: [{ type: Object }], // For customers

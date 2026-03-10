@@ -17,6 +17,7 @@ const loginUser = async (req, res) => {
             _id: user._id,
             username: user.username,
             role: user.role,
+            profileImage: user.profileImage,
             token: generateToken(user._id),
         });
     } else {
@@ -42,7 +43,7 @@ const seedAdmin = async () => {
 };
 
 const registerUser = async (req, res) => {
-    const { username, password, role, fullName, email, phone, address, salary } = req.body;
+    const { username, password, role, fullName, email, phone, address, salary, profileImage } = req.body;
 
     try {
         const userExists = await User.findOne({ username });
@@ -59,7 +60,8 @@ const registerUser = async (req, res) => {
             email,
             phone,
             address,
-            salary
+            salary,
+            profileImage
         });
 
         if (user) {
@@ -67,6 +69,7 @@ const registerUser = async (req, res) => {
                 _id: user._id,
                 username: user.username,
                 role: user.role,
+                profileImage: user.profileImage,
                 token: generateToken(user._id),
             });
         } else {
@@ -98,6 +101,7 @@ const updateUserProfile = async (req, res) => {
         user.email = req.body.email || user.email;
         user.phone = req.body.phone || user.phone;
         user.address = req.body.address || user.address;
+        user.profileImage = req.body.profileImage || user.profileImage;
 
         const updatedUser = await user.save();
 
@@ -105,6 +109,7 @@ const updateUserProfile = async (req, res) => {
             _id: updatedUser._id,
             username: updatedUser.username,
             role: updatedUser.role,
+            profileImage: updatedUser.profileImage,
             token: generateToken(updatedUser._id),
         });
     } else {
