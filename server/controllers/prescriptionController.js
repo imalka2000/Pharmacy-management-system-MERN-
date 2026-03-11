@@ -20,7 +20,6 @@ const createPrescription = async (req, res) => {
     }
 };
 
-// @desc    Get all prescriptions
 // @route   GET /api/prescriptions
 // @access  Private
 const getPrescriptions = async (req, res) => {
