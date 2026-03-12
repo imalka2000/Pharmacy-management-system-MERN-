@@ -1,68 +1,96 @@
-import { X, Calendar, User, DollarSign } from 'lucide-react';
+import { Modal, Button, Table, Badge, Card } from 'react-bootstrap';
 
 const ViewSaleModal = ({ sale, onClose }) => {
     if (!sale) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                <div className="flex justify-between items-center p-4 border-b bg-gray-50">
+        <Modal show={!!sale} onHide={onClose} centered size="lg" className="border-0">
+            <Modal.Header closeButton className="border-0 pb-0">
+                <Modal.Title className="fw-bold">Transaction Receipt</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="p-4">
+                <div className="d-flex justify-content-between align-items-start mb-4 p-3 bg-light rounded-4">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-800">Sale Details</h2>
-                        <p className="text-sm text-gray-500">{sale.invoiceNumber}</p>
+                        <span className="text-muted small fw-bold text-uppercase d-block mb-1">Invoice Number</span>
+                        <h4 className="fw-bold text-primary mb-0">{sale.invoiceNumber}</h4>
                     </div>
-                    <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded-full transition">
-                        <X size={24} className="text-gray-500" />
-                    </button>
+                    <div className="text-end">
+                        <Badge bg="success-subtle" text="success" className="px-3 py-2 rounded-pill fw-bold">
+                            Paid & Completed
+                        </Badge>
+                    </div>
                 </div>
 
-                <div className="p-6 overflow-y-auto">
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div className="flex items-center text-gray-600">
-                            <Calendar size={18} className="mr-2 text-primary" />
-                            <span className="font-medium">Date:</span>
-                            <span className="ml-2">{new Date(sale.createdAt).toLocaleString()}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600">
-                            <User size={18} className="mr-2 text-primary" />
-                            <span className="font-medium">Pharmacist:</span>
-                            <span className="ml-2">{sale.pharmacist?.username || 'Unknown'}</span>
-                        </div>
+                <div className="row g-3 mb-4">
+                    <div className="col-md-6">
+                        <Card className="border-0 bg-white shadow-sm rounded-4 h-100 p-3">
+                            <div className="d-flex align-items-center">
+                                <div className="rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center me-3" style={{ width: '45px', height: '45px' }}>
+                                    <i className="bi bi-calendar-event fs-5"></i>
+                                </div>
+                                <div>
+                                    <small className="text-muted d-block fw-bold text-uppercase" style={{ fontSize: '10px' }}>Date Issued</small>
+                                    <span className="fw-bold text-dark">{new Date(sale.createdAt).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </Card>
                     </div>
+                    <div className="col-md-6">
+                        <Card className="border-0 bg-white shadow-sm rounded-4 h-100 p-3">
+                            <div className="d-flex align-items-center">
+                                <div className="rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center me-3" style={{ width: '45px', height: '45px' }}>
+                                    <i className="bi bi-person-badge fs-5"></i>
+                                </div>
+                                <div>
+                                    <small className="text-muted d-block fw-bold text-uppercase" style={{ fontSize: '10px' }}>In Charge</small>
+                                    <span className="fw-bold text-dark">{sale.pharmacist?.username || 'System Agent'}</span>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
 
-                    <h3 className="font-semibold text-gray-800 mb-2 border-b pb-1">Items Included</h3>
-                    <div className="border rounded-lg overflow-hidden mb-6">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="py-2 px-4 text-xs font-semibold text-gray-500 uppercase">Medicine</th>
-                                    <th className="py-2 px-4 text-xs font-semibold text-gray-500 uppercase text-center">Qty</th>
-                                    <th className="py-2 px-4 text-xs font-semibold text-gray-500 uppercase text-right">Price</th>
-                                    <th className="py-2 px-4 text-xs font-semibold text-gray-500 uppercase text-right">Subtotal</th>
+                <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                    <Table hover responsive className="mb-0">
+                        <thead className="bg-white border-bottom">
+                            <tr>
+                                <th className="ps-4 py-3 text-muted small fw-bold text-uppercase">Medicine Item</th>
+                                <th className="py-3 text-muted small fw-bold text-uppercase text-center">Qty</th>
+                                <th className="py-3 text-muted small fw-bold text-uppercase text-end">Price</th>
+                                <th className="pe-4 py-3 text-muted small fw-bold text-uppercase text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {sale.items.map((item, index) => (
+                                <tr key={index} className="align-middle border-bottom border-light">
+                                    <td className="ps-4">
+                                        <div className="fw-bold text-dark">{item.medicine?.name || 'Item Removed from Store'}</div>
+                                        <small className="text-muted">ID: {item.medicine?._id?.slice(-6).toUpperCase() || 'N/A'}</small>
+                                    </td>
+                                    <td className="text-center">
+                                        <span className="badge bg-light text-dark border px-3 py-1 fw-bold">{item.quantity}</span>
+                                    </td>
+                                    <td className="text-end text-muted">${item.price.toFixed(2)}</td>
+                                    <td className="pe-4 text-end fw-bold text-dark">${item.subtotal.toFixed(2)}</td>
                                 </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {sale.items.map((item, index) => (
-                                    <tr key={index} className="hover:bg-gray-50">
-                                        <td className="py-2 px-4 text-gray-800">{item.medicine?.name || 'Deleted Item'}</td>
-                                        <td className="py-2 px-4 text-center">{item.quantity}</td>
-                                        <td className="py-2 px-4 text-right">${item.price}</td>
-                                        <td className="py-2 px-4 text-right font-medium text-gray-700">${item.subtotal}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                            ))}
+                        </tbody>
+                    </Table>
+                </div>
 
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="flex justify-between items-center text-lg font-bold text-gray-900 border-t pt-2 mt-2">
-                            <span>Grand Total</span>
-                            <span className="flex items-center text-green-600"><DollarSign size={20} /> {sale.grandTotal}</span>
-                        </div>
+                <div className="bg-primary-subtle p-4 rounded-4 border border-primary-subtle border-2">
+                    <div className="d-flex justify-content-between align-items-center">
+                        <h5 className="fw-bold text-primary mb-0">Total Transaction Value</h5>
+                        <h2 className="fw-bold text-primary mb-0">${sale.grandTotal.toFixed(2)}</h2>
                     </div>
                 </div>
-            </div>
-        </div>
+            </Modal.Body>
+            <Modal.Footer className="border-0 pb-4 pt-0 px-4">
+                <Button variant="primary" className="w-100 py-3 rounded-4 fw-bold shadow-sm" onClick={() => window.print()}>
+                    <i className="bi bi-printer me-2"></i> Print Thermal Receipt
+                </Button>
+            </Modal.Footer>
+        </Modal>
     );
 };
 

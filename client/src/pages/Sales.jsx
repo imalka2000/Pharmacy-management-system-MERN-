@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../api-request/config';
 import useAuth from '../hooks/useAuth';
-import { Plus, Search, Calendar, DollarSign, User } from 'lucide-react';
+import { Button, Table, Card, Spinner } from 'react-bootstrap';
 import CreateSaleModal from '../components/CreateSaleModal';
 import ViewSaleModal from '../components/ViewSaleModal';
+import toast from 'react-hot-toast';
 
 const Sales = () => {
     const { user } = useAuth();
@@ -12,97 +13,101 @@ const Sales = () => {
     const [selectedSale, setSelectedSale] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const config = { headers: { Authorization: `Bearer ${user?.token}` } };
-
-    // ... (fetchSales function remains same)
+    useEffect(() => {
+        if (user?.token) fetchSales();
+    }, [user]);
 
     const fetchSales = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const { data } = await axios.get('http://localhost:5000/api/sales', config);
+            const { data } = await apiClient.get('/sales');
             setSales(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         } catch (error) {
             console.error(error);
+            toast.error('Failed to fetch sales history');
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchSales();
-    }, [user]);
-
     return (
-        <div className="p-6 h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6">
+        <div className="px-0">
+            <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Sales History</h1>
-                    <p className="text-gray-500">Manage and view your sales records</p>
+                    <h2 className="fw-bold text-dark m-0">Sales History</h2>
+                    <p className="text-muted small m-0">Review and manage recent transactions</p>
                 </div>
-                <button
+                <Button
+                    variant="primary"
+                    className="shadow-sm rounded-3 d-flex align-items-center px-4 py-2"
                     onClick={() => setIsModalOpen(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center transition shadow-sm"
                 >
-                    <Plus size={20} className="mr-2" />
-                    New Sale
-                </button>
+                    <i className="bi bi-cart-plus-fill me-2"></i> New Sale
+                </Button>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex-1 overflow-hidden flex flex-col">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+            {loading ? (
+                <div className="text-center py-5">
+                    <Spinner animation="border" variant="primary" />
+                    <p className="mt-2 text-muted">Loading transaction records...</p>
+                </div>
+            ) : sales.length === 0 ? (
+                <div className="text-center py-5 bg-white rounded-4 shadow-sm border">
+                    <i className="bi bi-receipt fs-1 text-muted opacity-25"></i>
+                    <p className="mt-3 text-muted">No sales records found.</p>
+                </div>
+            ) : (
+                <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
+                    <Table hover responsive className="mb-0">
+                        <thead className="bg-light">
                             <tr>
-                                <th className="py-4 px-6 font-semibold text-gray-600 text-sm uppercase">Invoice #</th>
-                                <th className="py-4 px-6 font-semibold text-gray-600 text-sm uppercase">Date</th>
-                                <th className="py-4 px-6 font-semibold text-gray-600 text-sm uppercase">Pharmacist</th>
-                                <th className="py-4 px-6 font-semibold text-gray-600 text-sm uppercase">Items</th>
-                                <th className="py-4 px-6 font-semibold text-gray-600 text-sm uppercase">Total</th>
+                                <th className="ps-4 py-3 text-muted small fw-bold text-uppercase">Invoice #</th>
+                                <th className="py-3 text-muted small fw-bold text-uppercase">Date & Time</th>
+                                <th className="py-3 text-muted small fw-bold text-uppercase">Pharmacist</th>
+                                <th className="py-3 text-muted small fw-bold text-uppercase text-center">Items</th>
+                                <th className="pe-4 py-3 text-end text-muted small fw-bold text-uppercase">Total Amount</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan="5" className="text-center py-8 text-gray-500">Loading sales...</td>
+                        <tbody>
+                            {sales.map(sale => (
+                                <tr
+                                    key={sale._id}
+                                    className="align-middle"
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={() => setSelectedSale(sale)}
+                                >
+                                    <td className="ps-4">
+                                        <span className="fw-bold text-dark">{sale.invoiceNumber}</span>
+                                    </td>
+                                    <td>
+                                        <div className="text-muted d-flex align-items-center">
+                                            <i className="bi bi-calendar3 text-primary opacity-50 me-2"></i>
+                                            {new Date(sale.createdAt).toLocaleDateString()}
+                                            <span className="ms-2 small opacity-75">{new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="text-muted d-flex align-items-center">
+                                            <i className="bi bi-person text-primary opacity-50 me-2"></i>
+                                            {sale.pharmacist?.username || 'System'}
+                                        </div>
+                                    </td>
+                                    <td className="text-center">
+                                        <span className="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                                            {sale.items.length} {sale.items.length === 1 ? 'Item' : 'Items'}
+                                        </span>
+                                    </td>
+                                    <td className="pe-4 text-end">
+                                        <span className="fw-bold text-primary fs-5">
+                                            ${sale.grandTotal.toFixed(2)}
+                                        </span>
+                                    </td>
                                 </tr>
-                            ) : sales.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" className="text-center py-8 text-gray-500">No sales records found.</td>
-                                </tr>
-                            ) : (
-                                sales.map(sale => (
-                                    <tr
-                                        key={sale._id}
-                                        className="hover:bg-gray-50 transition cursor-pointer"
-                                        onClick={() => setSelectedSale(sale)}
-                                    >
-                                        <td className="py-4 px-6 font-medium text-gray-800">{sale.invoiceNumber}</td>
-                                        <td className="py-4 px-6 text-gray-600">
-                                            <div className="flex items-center">
-                                                <Calendar size={16} className="mr-2 text-gray-400" />
-                                                {new Date(sale.createdAt).toLocaleDateString()}
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-6 text-gray-600">
-                                            <div className="flex items-center">
-                                                <User size={16} className="mr-2 text-gray-400" />
-                                                {sale.pharmacist?.username || 'Unknown'}
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-6 text-gray-600">{sale.items.length} items</td>
-                                        <td className="py-4 px-6 font-bold text-green-600">
-                                            <div className="flex items-center">
-                                                <DollarSign size={16} className="mr-1" />
-                                                {sale.grandTotal}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
+                            ))}
                         </tbody>
-                    </table>
-                </div>
-            </div>
+                    </Table>
+                </Card>
+            )}
 
             {isModalOpen && (
                 <CreateSaleModal

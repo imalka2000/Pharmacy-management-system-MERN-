@@ -1,57 +1,68 @@
-import { X, Phone, Mail, MapPin, Building2 } from 'lucide-react';
+import { Modal, Button, ListGroup } from 'react-bootstrap';
 
 const ViewSupplierModal = ({ supplier, onClose }) => {
     if (!supplier) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
-                <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-6 text-white flex justify-between items-start">
-                    <div>
-                        <div className="bg-white/10 w-12 h-12 rounded-lg flex items-center justify-center mb-3">
-                            <Building2 size={24} className="text-white" />
-                        </div>
-                        <h2 className="text-2xl font-bold">{supplier.name}</h2>
-                        <p className="text-gray-400 text-sm">Supplier Details</p>
+        <Modal show={!!supplier} onHide={onClose} centered size="md" className="border-0">
+            <Modal.Header closeButton className="border-0 pb-0">
+                <Modal.Title className="fw-bold text-dark">Supplier Details</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="p-4">
+                <div className="text-center mb-4">
+                    <div className="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3 shadow-sm border border-primary-subtle" style={{ width: '80px', height: '80px' }}>
+                        <i className="bi bi-building fs-1"></i>
                     </div>
-                    <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full transition">
-                        <X size={24} />
-                    </button>
+                    <h3 className="fw-bold text-dark mb-1">{supplier.name}</h3>
+                    <p className="text-muted small">Registered Supply Partner</p>
                 </div>
 
-                <div className="p-6 space-y-6">
-                    <div className="flex items-start">
-                        <div className="bg-blue-50 p-2 rounded-lg mr-4 text-blue-600">
-                            <Phone size={20} />
+                <ListGroup variant="flush" className="rounded-4 border shadow-sm overflow-hidden">
+                    <ListGroup.Item className="py-3 px-4">
+                        <div className="d-flex align-items-center">
+                            <div className="rounded-3 bg-info-subtle text-info d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                                <i className="bi bi-telephone-fill"></i>
+                            </div>
+                            <div>
+                                <span className="text-muted small fw-bold text-uppercase d-block">Contact Number</span>
+                                <span className="fw-bold text-dark">{supplier.contactNumber}</span>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Contact Number</label>
-                            <p className="text-gray-800 font-medium text-lg">{supplier.contactNumber}</p>
-                        </div>
-                    </div>
+                    </ListGroup.Item>
 
-                    <div className="flex items-start">
-                        <div className="bg-purple-50 p-2 rounded-lg mr-4 text-purple-600">
-                            <Mail size={20} />
+                    <ListGroup.Item className="py-3 px-4">
+                        <div className="d-flex align-items-center">
+                            <div className="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                                <i className="bi bi-envelope-at-fill"></i>
+                            </div>
+                            <div>
+                                <span className="text-muted small fw-bold text-uppercase d-block">Email Address</span>
+                                <span className="fw-bold text-dark">{supplier.email || <span className="text-muted opacity-50">Not Provided</span>}</span>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Email Address</label>
-                            <p className="text-gray-800 font-medium">{supplier.email || 'N/A'}</p>
-                        </div>
-                    </div>
+                    </ListGroup.Item>
 
-                    <div className="flex items-start">
-                        <div className="bg-orange-50 p-2 rounded-lg mr-4 text-orange-600">
-                            <MapPin size={20} />
+                    <ListGroup.Item className="py-3 px-4 border-0">
+                        <div className="d-flex align-items-start">
+                            <div className="rounded-3 bg-warning-subtle text-warning d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                                <i className="bi bi-geo-alt-fill"></i>
+                            </div>
+                            <div>
+                                <span className="text-muted small fw-bold text-uppercase d-block">Office Address</span>
+                                <span className="text-dark d-block" style={{ lineHeight: '1.4' }}>
+                                    {supplier.address || <span className="text-muted opacity-50">No address record</span>}
+                                </span>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Address</label>
-                            <p className="text-gray-800 font-medium leading-relaxed">{supplier.address || 'N/A'}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </ListGroup.Item>
+                </ListGroup>
+            </Modal.Body>
+            <Modal.Footer className="border-0 pt-0 pb-4 px-4">
+                <Button variant="light" className="w-100 py-2 fw-bold" onClick={onClose}>
+                    Close Profile
+                </Button>
+            </Modal.Footer>
+        </Modal>
     );
 };
 

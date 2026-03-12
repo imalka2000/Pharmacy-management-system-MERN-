@@ -1,6 +1,10 @@
 const Medicine = require('../models/Medicine');
 const Sale = require('../models/Sale');
 const Supplier = require('../models/Supplier');
+const Delivery = require('../models/Delivery');
+const Promotion = require('../models/Promotion');
+const Feedback = require('../models/Feedback');
+const SupplyRequest = require('../models/SupplyRequest');
 
 // @desc    Get dashboard stats
 // @route   GET /api/reports/dashboard
@@ -19,13 +23,23 @@ const getDashboardStats = async (req, res) => {
         // Low stock (e.g., less than 10)
         const lowStock = await Medicine.countDocuments({ quantity: { $gt: 0, $lt: 10 } });
 
+        // New Metrics
+        const pendingDeliveries = await Delivery.countDocuments({ status: 'Pending' });
+        const activePromotions = await Promotion.countDocuments({ status: 'Active' });
+        const pendingFeedback = await Feedback.countDocuments({ status: 'Pending' });
+        const pendingSupplyRequests = await SupplyRequest.countDocuments({ status: 'Pending' });
+
         res.json({
             totalMedicines,
             totalSuppliers,
             totalSales,
             totalRevenue,
             outOfStock,
-            lowStock
+            lowStock,
+            pendingDeliveries,
+            activePromotions,
+            pendingFeedback,
+            pendingSupplyRequests
         });
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });

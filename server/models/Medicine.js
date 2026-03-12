@@ -7,6 +7,7 @@ const medicineSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     quantity: { type: Number, required: true },
     manufacturer: { type: String },
+    imageUrl: { type: String },
     supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' }
 }, { timestamps: true });
 

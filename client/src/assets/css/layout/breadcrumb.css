@@ -1,0 +1,47 @@
+.bredcrumb-card {
+  height: 50px;   
+  padding: 5px;     
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+}
+
+.breadcrumb-wrapper {
+  margin-bottom: 20px;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.breadcrumb-wrapper h4 {
+  color: #515365;
+  font-weight: 500;
+  margin-top: 6px;
+  font-size: 18px;
+}
+
+.breadcrumb-wrapper .breadcrumb {
+  margin-bottom: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.breadcrumb-wrapper .breadcrumb li {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 400;
+  margin-left: 3px;
+}
+
+.breadcrumb-wrapper .breadcrumb div a {
+  text-decoration: none;
+  color: #8a8a8a;
+  cursor: pointer;
+}
+
+.breadcrumb-wrapper .breadcrumb div a:hover {
+  color: #e22a6f;
+}
+
+.breadcrumb-wrapper .breadcrumb .active {
+  color: #e22a6f;
+}
