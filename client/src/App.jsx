@@ -16,20 +16,25 @@ import Reports from './pages/Reports';
 import Users from './pages/Users';
 import Employees from './pages/Employees';
 import Profile from './pages/Profile';
+import Store from './pages/Store';
 import useAuth from './hooks/useAuth';
 
 const PrivateRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
-  
   if (loading) return <div className="d-flex justify-content-center align-items-center vh-100">Loading...</div>;
-  
   if (!user) return <Navigate to="/login" />;
-  
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" />; // Redirect to dashboard if not authorized
+    return <Navigate to={user.role === 'user' ? '/store' : '/dashboard'} />;
   }
-  
   return children;
+};
+
+// Smart redirect based on role
+const HomeRedirect = () => {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="d-flex justify-content-center align-items-center vh-100">Loading...</div>;
+  if (!user) return <Navigate to="/login" />;
+  return <Navigate to={user.role === 'user' ? '/store' : '/dashboard'} />;
 };
 
 function App() {
@@ -50,10 +55,19 @@ function App() {
           <DefaultLayout />
         </PrivateRoute>
       }>
-        <Route index element={<Dashboard />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        
-        {/* Protected Routes */}
+        <Route index element={<HomeRedirect />} />
+
+        {/* Dashboard - staff only */}
+        <Route path="dashboard" element={
+          <PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}>
+            <Dashboard />
+          </PrivateRoute>
+        } />
+
+        {/* Store - all users */}
+        <Route path="store" element={<Store />} />
+
+        {/* Staff routes */}
         <Route path="medicines" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Medicines /></PrivateRoute>} />
         <Route path="sales" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Sales /></PrivateRoute>} />
         <Route path="prescriptions" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST, ROLES.USER]}><Prescriptions /></PrivateRoute>} />

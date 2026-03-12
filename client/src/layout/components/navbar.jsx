@@ -14,8 +14,9 @@ const Nav = ({ isOpen }) => {
   const role = user?.role || "user";
   const isStaff = ["admin", "pharmacist"].includes(role);
   const isAdmin = role === "admin";
+  const isUser = role === "user";
 
-  const navItem = (to, icon, label) => (
+  const NavItem = ({ to, icon, label }) => (
     <NavLink
       to={to}
       className={({ isActive }) =>
@@ -32,13 +33,13 @@ const Nav = ({ isOpen }) => {
   return (
     <aside className={`sidebar ${isOpen ? "" : "closed"}`}>
       <div className="sidebar-inner d-flex flex-column">
+
         {/* Brand */}
         <div className="sidebar-brand d-flex align-items-center gap-2 px-4 py-3">
           <div
-            className="brand-icon d-flex align-items-center justify-content-center rounded-circle"
+            className="brand-icon d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
             style={{
-              width: 40,
-              height: 40,
+              width: 40, height: 40,
               background: "rgba(255,255,255,0.15)",
               backdropFilter: "blur(4px)",
               border: "1px solid rgba(255,255,255,0.3)",
@@ -49,73 +50,93 @@ const Nav = ({ isOpen }) => {
           <div>
             <span className="fw-bold text-white fs-5 lh-1 d-block">PharmaCare</span>
             <small className="text-white-50" style={{ fontSize: "0.7rem" }}>
-              Management System
+              {isUser ? "Customer Portal" : "Management System"}
             </small>
           </div>
         </div>
 
         <hr className="sidebar-divider mx-3 my-0 border-white border-opacity-10" />
 
-        {/* Nav Menu */}
+        {/* Navigation */}
         <nav className="flex-grow-1 overflow-auto py-2 sidebar-nav">
-          <p className="sidebar-section-label px-4 pt-3 pb-1 text-uppercase text-white-50 fw-semibold" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
-            Main
-          </p>
 
-          {navItem("/dashboard", "bi-speedometer2", "Dashboard")}
-
-          {isStaff && navItem("/medicines", "bi-capsule", "Inventory")}
-          {isStaff && navItem("/sales", "bi-cart-check", "Sales & Billing")}
-
-          {navItem("/prescriptions", "bi-receipt", "Prescriptions")}
-
-          {isStaff && navItem("/supply-requests", "bi-truck", "Supply Chain")}
-          {isStaff && navItem("/deliveries", "bi-bicycle", "Deliveries")}
-          {isStaff && navItem("/suppliers", "bi-building", "Suppliers")}
-
-          {isAdmin && (
+          {/* ---- NORMAL USER MENU ---- */}
+          {isUser && (
             <>
               <p className="sidebar-section-label px-4 pt-3 pb-1 text-uppercase text-white-50 fw-semibold" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
-                Administration
+                Shop
               </p>
+              <NavItem to="/store" icon="bi-shop" label="Medicine Store" />
+              <NavItem to="/prescriptions" icon="bi-receipt" label="My Prescriptions" />
 
-              <button
-                className={`nav-link d-flex align-items-center gap-3 w-100 border-0 bg-transparent text-start ${openGroup === "admin" ? "active-parent" : ""}`}
-                onClick={() => toggleGroup("admin")}
-              >
-                <span className="icon-holder">
-                  <i className="bi bi-shield-lock" />
-                </span>
-                <span className="title flex-grow-1">Admin</span>
-                <i className={`bi ${openGroup === "admin" ? "bi-chevron-down" : "bi-chevron-right"} small me-1`} />
-              </button>
-
-              <Collapse in={openGroup === "admin"}>
-                <div className="navigation-collapse">
-                  <NavLink to="/users" className={({ isActive }) => `nav-link d-block ${isActive ? "active" : ""}`}>
-                    User Accounts
-                  </NavLink>
-                  <NavLink to="/employees" className={({ isActive }) => `nav-link d-block ${isActive ? "active" : ""}`}>
-                    Staff Directory
-                  </NavLink>
-                  <NavLink to="/reports" className={({ isActive }) => `nav-link d-block ${isActive ? "active" : ""}`}>
-                    System Reports
-                  </NavLink>
-                </div>
-              </Collapse>
+              <p className="sidebar-section-label px-4 pt-3 pb-1 text-uppercase text-white-50 fw-semibold" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
+                More
+              </p>
+              <NavItem to="/promotions" icon="bi-megaphone" label="Promotions" />
+              <NavItem to="/feedback" icon="bi-chat-heart" label="Feedback" />
+              <NavItem to="/profile" icon="bi-person" label="My Profile" />
             </>
           )}
 
-          <p className="sidebar-section-label px-4 pt-3 pb-1 text-uppercase text-white-50 fw-semibold" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
-            Engagement
-          </p>
+          {/* ---- STAFF / ADMIN MENU ---- */}
+          {isStaff && (
+            <>
+              <p className="sidebar-section-label px-4 pt-3 pb-1 text-uppercase text-white-50 fw-semibold" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
+                Main
+              </p>
+              <NavItem to="/dashboard" icon="bi-speedometer2" label="Dashboard" />
+              <NavItem to="/store" icon="bi-shop" label="Store" />
+              <NavItem to="/medicines" icon="bi-capsule" label="Inventory" />
+              <NavItem to="/sales" icon="bi-cart-check" label="Sales & Billing" />
+              <NavItem to="/prescriptions" icon="bi-receipt" label="Prescriptions" />
+              <NavItem to="/supply-requests" icon="bi-truck" label="Supply Chain" />
+              <NavItem to="/deliveries" icon="bi-bicycle" label="Deliveries" />
+              <NavItem to="/suppliers" icon="bi-building" label="Suppliers" />
 
-          {navItem("/promotions", "bi-megaphone", "Promotions")}
-          {navItem("/feedback", "bi-chat-heart", "Feedback")}
-          {navItem("/profile", "bi-person", "My Profile")}
+              {isAdmin && (
+                <>
+                  <p className="sidebar-section-label px-4 pt-3 pb-1 text-uppercase text-white-50 fw-semibold" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
+                    Administration
+                  </p>
+
+                  <button
+                    className={`nav-link d-flex align-items-center gap-3 w-100 border-0 bg-transparent text-start ${openGroup === "admin" ? "active-parent" : ""}`}
+                    onClick={() => toggleGroup("admin")}
+                  >
+                    <span className="icon-holder">
+                      <i className="bi bi-shield-lock" />
+                    </span>
+                    <span className="title flex-grow-1">Admin</span>
+                    <i className={`bi ${openGroup === "admin" ? "bi-chevron-down" : "bi-chevron-right"} small me-1`} />
+                  </button>
+
+                  <Collapse in={openGroup === "admin"}>
+                    <div className="navigation-collapse">
+                      <NavLink to="/users" className={({ isActive }) => `nav-link d-block ${isActive ? "active" : ""}`}>
+                        User Accounts
+                      </NavLink>
+                      <NavLink to="/employees" className={({ isActive }) => `nav-link d-block ${isActive ? "active" : ""}`}>
+                        Staff Directory
+                      </NavLink>
+                      <NavLink to="/reports" className={({ isActive }) => `nav-link d-block ${isActive ? "active" : ""}`}>
+                        System Reports
+                      </NavLink>
+                    </div>
+                  </Collapse>
+                </>
+              )}
+
+              <p className="sidebar-section-label px-4 pt-3 pb-1 text-uppercase text-white-50 fw-semibold" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
+                Engagement
+              </p>
+              <NavItem to="/promotions" icon="bi-megaphone" label="Promotions" />
+              <NavItem to="/feedback" icon="bi-chat-heart" label="Feedback" />
+              <NavItem to="/profile" icon="bi-person" label="My Profile" />
+            </>
+          )}
         </nav>
 
-        {/* Footer */}
+        {/* Footer: User Info */}
         <div className="sidebar-footer px-3 py-3 border-top border-white border-opacity-10">
           <div className="d-flex align-items-center gap-2">
             <div
@@ -129,11 +150,12 @@ const Nav = ({ isOpen }) => {
                 {user?.name || user?.username || "User"}
               </div>
               <div className="text-white-50" style={{ fontSize: "0.7rem" }}>
-                {user?.role || "Pharmacist"}
+                {role === "user" ? "Customer" : user?.role || "Pharmacist"}
               </div>
             </div>
           </div>
         </div>
+
       </div>
     </aside>
   );
