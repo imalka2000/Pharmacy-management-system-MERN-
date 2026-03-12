@@ -15,11 +15,12 @@ const DefaultLayout = () => {
                 position="top-right"
                 reverseOrder={false}
                 toastOptions={{
-                    className: 'fw-bold small rounded-4 shadow-lg',
+                    className: 'fw-semibold small',
                     style: {
-                        background: '#212529',
+                        background: '#1e293b',
                         color: '#fff',
-                        padding: '16px 24px',
+                        padding: '14px 20px',
+                        borderRadius: '8px',
                     },
                 }}
             />
