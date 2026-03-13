@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import apiClient from '../api-request/config';
+import apiClient, { BASE_URL } from '../api-request/config';
 import useAuth from '../hooks/useAuth';
 import { Button, Form, Row, Col, Card, Modal, Table, Spinner, InputGroup, Badge, Image } from 'react-bootstrap';
 import toast from 'react-hot-toast';
@@ -206,7 +205,7 @@ const Users = () => {
                         <div className="text-center mb-4">
                             <div className="position-relative d-inline-block">
                                 <Image
-                                    src={formData.profileImage ? `http://localhost:5000${formData.profileImage}` : `https://ui-avatars.com/api/?name=Patient&background=f8f9fa&color=adb5bd&bold=true`}
+                                    src={formData.profileImage ? (formData.profileImage.startsWith('http') ? formData.profileImage : `${BASE_URL}${formData.profileImage}`) : `https://ui-avatars.com/api/?name=${formData.fullName || 'Patient'}&background=random`}
                                     roundedCircle
                                     className="border shadow-sm object-fit-cover"
                                     width="100"

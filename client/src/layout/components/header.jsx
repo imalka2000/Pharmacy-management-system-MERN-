@@ -2,13 +2,14 @@ import { useContext, useState } from 'react';
 import AuthContext from '../../context/AuthContext';
 import { NavDropdown, Image } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { BASE_URL } from '../../api-request/config';
 
 function Header({ toggleSidebar }) {
     const { user, logout } = useContext(AuthContext);
     const [searchQuery, setSearchQuery] = useState('');
 
     const userAvatar = user?.profileImage
-        ? (user.profileImage.startsWith('http') ? user.profileImage : `http://localhost:5000${user.profileImage}`)
+        ? (user.profileImage.startsWith('http') ? user.profileImage : `${BASE_URL}${user.profileImage}`)
         : `https://ui-avatars.com/api/?name=${user?.name || user?.username || 'User'}&background=184737&color=fff&bold=true`;
 
     return (

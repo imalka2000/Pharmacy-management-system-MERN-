@@ -5,6 +5,6 @@ const router = express.Router();
 
 router.route('/')
     .post(protect, pharmacist, createSale)
-    .get(protect, admin, getSales);
+    .get(protect, pharmacist, getSales);
 
 module.exports = router;

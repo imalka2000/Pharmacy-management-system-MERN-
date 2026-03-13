@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import AuthContext from '../context/AuthContext';
-import apiClient from '../api-request/config';
+import apiClient, { BASE_URL } from '../api-request/config';
 import { Button, Form, Row, Col, Card, Image, Spinner } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 
@@ -19,7 +19,7 @@ const Profile = () => {
     });
 
     const userAvatar = formData.profileImage 
-        ? (formData.profileImage.startsWith('http') ? formData.profileImage : `http://localhost:5000${formData.profileImage}`)
+        ? (user.profileImage.startsWith('http') ? user.profileImage : `${BASE_URL}${user.profileImage}`)
         : `https://ui-avatars.com/api/?name=${formData.fullName || formData.username || 'User'}&background=0d6efd&color=fff&bold=true`;
 
     const uploadFileHandler = async (e) => {

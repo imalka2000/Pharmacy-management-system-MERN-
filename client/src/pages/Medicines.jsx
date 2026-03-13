@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import apiClient from '../api-request/config';
+import apiClient, { BASE_URL } from '../api-request/config';
 import useAuth from '../hooks/useAuth';
 import { Modal, Button, Form, Table, Card, Spinner, Row, Col, Badge, InputGroup } from 'react-bootstrap';
 import toast from 'react-hot-toast';
@@ -173,7 +172,7 @@ const Medicines = () => {
                                         <div className="rounded-4 bg-light d-flex align-items-center justify-content-center overflow-hidden border shadow-inner" style={{ width: '64px', height: '64px' }}>
                                             {med.imageUrl ? (
                                                 <img
-                                                    src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5005${med.imageUrl}`}
+                                                    src={med.imageUrl.startsWith('http') ? med.imageUrl : `${BASE_URL}${med.imageUrl}`}
                                                     alt={med.name}
                                                     className="w-100 h-100 object-cover"
                                                     onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.classList.remove('d-none'); }}
