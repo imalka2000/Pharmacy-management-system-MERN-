@@ -82,7 +82,8 @@ const registerUser = async (req, res) => {
 
 const getUsers = async (req, res) => {
     try {
-        const users = await User.find({});
+        const query = req.query.role ? { role: req.query.role } : {};
+        const users = await User.find(query).select('-password');
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
