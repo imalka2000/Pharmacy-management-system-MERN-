@@ -27,7 +27,7 @@ const Feedback = () => {
             const { data } = await apiClient.get('/feedback');
             setFeedbacks(data);
         } catch (error) {
-            toast.error('Failed to load feedback bank');
+            toast.error('Failed to load feedback');
         } finally {
             setLoading(false);
         }
@@ -38,10 +38,10 @@ const Feedback = () => {
         setIsSubmitting(true);
         try {
             await apiClient.post('/feedback', formData);
-            toast.success('Validation success: Feedback submitted');
+            toast.success('Feedback submitted successfully');
             setFormData({ rating: 5, comments: '' });
         } catch (error) {
-            toast.error('Failed to transmit feedback');
+            toast.error('Failed to send feedback');
         } finally {
             setIsSubmitting(false);
         }
@@ -50,10 +50,10 @@ const Feedback = () => {
     const markReviewed = async (id) => {
         try {
             await apiClient.put(`/feedback/${id}/status`, { status: 'Reviewed' });
-            toast.success('Status updated: Reviewed');
+            toast.success('Feedback marked as reviewed');
             fetchFeedbacks();
         } catch (error) {
-            toast.error('Control error: Failed to update status');
+            toast.error('Failed to update status');
         }
     };
 
@@ -83,16 +83,16 @@ const Feedback = () => {
                                     <i className="bi bi-chat-heart-fill text-primary fs-1"></i>
                                 </div>
                                 <h2 className="fw-black text-dark mb-2">Share Your Experience</h2>
-                                <p className="text-muted mb-4 px-lg-5">Your insights help us refine our pharmaceutical services and logistics.</p>
+                                <p className="text-muted mb-4 px-lg-5">Your feedback helps us improve our services.</p>
 
                                 <Form onSubmit={handleSubmit} className="text-start mt-4">
                                     <Form.Group className="mb-4 text-center">
-                                        <Form.Label className="small fw-bold text-muted text-uppercase letter-spacing-1 mb-3">Service Rating</Form.Label>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase letter-spacing-1 mb-3">Rating</Form.Label>
                                         {renderStars(0, true)}
                                     </Form.Group>
 
                                     <Form.Group className="mb-4">
-                                        <Form.Label className="small fw-bold text-muted text-uppercase letter-spacing-1">Your Detailed Feedback</Form.Label>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase letter-spacing-1">Your Feedback</Form.Label>
                                         <Form.Control
                                             as="textarea"
                                             rows={4}
@@ -128,22 +128,22 @@ const Feedback = () => {
     return (
         <Container fluid>
             <div className="mb-4">
-                <h2 className="fw-bold text-dark m-0">Customer Satisfaction</h2>
-                <p className="text-muted small m-0">Analyze and manage incoming service reviews</p>
+                <h2 className="fw-bold text-dark m-0">Customer Feedback</h2>
+                <p className="text-muted small m-0">Review and manage customer feedback</p>
             </div>
 
             <Row className="g-4">
                 {loading ? (
                     <Col xs={12} className="text-center py-5">
                         <Spinner animation="border" variant="primary" />
-                        <p className="mt-3 text-muted fw-medium">Accessing feedback vault...</p>
+                        <p className="mt-3 text-muted fw-medium">Loading feedback...</p>
                     </Col>
                 ) : feedbacks.length === 0 ? (
                     <Col xs={12}>
                         <Card className="border-0 shadow-sm rounded-4 text-center py-5 bg-white">
                             <Card.Body>
                                 <i className="bi bi-chat-square-dots fs-1 text-muted opacity-25 d-block mb-3"></i>
-                                <h5 className="fw-bold text-muted">No feedback recorded</h5>
+                                <h5 className="fw-bold text-muted">No feedback received yet</h5>
                             </Card.Body>
                         </Card>
                     </Col>
@@ -158,7 +158,7 @@ const Feedback = () => {
                                                 <i className="bi bi-person-fill fs-4"></i>
                                             </div>
                                             <div>
-                                                <div className="fw-bold text-dark">{fb.customer?.fullName || 'Anonymous Resident'}</div>
+                                                <div className="fw-bold text-dark">{fb.customer?.fullName || 'Anonymous User'}</div>
                                                 <small className="text-muted fw-bold">{new Date(fb.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</small>
                                             </div>
                                         </div>

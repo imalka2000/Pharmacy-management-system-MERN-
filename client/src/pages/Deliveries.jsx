@@ -86,15 +86,15 @@ const Deliveries = () => {
         <Container fluid>
             <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                 <div>
-                    <h2 className="fw-bold text-dark m-0">Logistics Control</h2>
-                    <p className="text-muted small m-0">Monitor dispatch operations and track shipments</p>
+                    <h2 className="fw-bold text-dark m-0">Deliveries</h2>
+                    <p className="text-muted small m-0">Manage and track your deliveries</p>
                 </div>
                 <Button
                     variant="primary"
                     className="shadow-sm rounded-3 d-flex align-items-center px-4 py-2"
                     onClick={() => setShowModal(true)}
                 >
-                    <i className="bi bi-plus-circle-fill me-2"></i> Assign Dispatch
+                    <i className="bi bi-plus-circle-fill me-2"></i> New Delivery
                 </Button>
             </div>
 
@@ -118,12 +118,12 @@ const Deliveries = () => {
                         value={filterStatus}
                         onChange={e => setFilterStatus(e.target.value)}
                     >
-                        <option value="All">All Operations</option>
-                        <option value="Pending">Pending Assignment</option>
-                        <option value="Picked Up">Dispatched</option>
+                        <option value="All">All Deliveries</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Picked Up">Picked Up</option>
                         <option value="In Transit">On the Way</option>
-                        <option value="Delivered">Successfully Delivered</option>
-                        <option value="Cancelled">Voided</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
                     </Form.Select>
                 </Col>
             </Row>
@@ -132,14 +132,14 @@ const Deliveries = () => {
                 {loading ? (
                     <div className="text-center py-5">
                         <Spinner animation="border" variant="primary" />
-                        <p className="mt-3 text-muted fw-medium">Syncing with logistics server...</p>
+                        <p className="mt-3 text-muted fw-medium">Loading deliveries...</p>
                     </div>
                 ) : (
                     <Table hover responsive className="mb-0 align-middle">
                         <thead className="bg-light border-bottom">
                             <tr>
-                                <th className="ps-4 py-3 text-muted small fw-bold text-uppercase">Tracking Details</th>
-                                <th className="py-3 text-muted small fw-bold text-uppercase">Logistics Agent</th>
+                                <th className="ps-4 py-3 text-muted small fw-bold text-uppercase">Delivery Details</th>
+                                <th className="py-3 text-muted small fw-bold text-uppercase">Driver</th>
                                 <th className="py-3 text-muted small fw-bold text-uppercase">Destination</th>
                                 <th className="pe-4 py-3 text-muted small fw-bold text-uppercase text-center">Status</th>
                             </tr>
@@ -149,7 +149,7 @@ const Deliveries = () => {
                                 <tr>
                                     <td colSpan="4" className="text-center py-5 text-muted">
                                         <i className="bi bi-truck fs-1 opacity-25 d-block mb-3"></i>
-                                        No active delivery missions found.
+                                        No active deliveries found.
                                     </td>
                                 </tr>
                             ) : (
@@ -170,7 +170,7 @@ const Deliveries = () => {
                                             </td>
                                             <td className="py-3">
                                                 <div className="fw-bold text-dark small">{delivery.driver?.fullName || 'Pending...'}</div>
-                                                <div className="text-muted xxs text-uppercase fw-bold letter-spacing-1">Rank: Fleet Agent</div>
+                                                <div className="text-muted xxs text-uppercase fw-bold letter-spacing-1">Role: Driver</div>
                                             </td>
                                             <td className="py-3">
                                                 <div className="d-flex align-items-center text-muted small" style={{ maxWidth: '250px' }}>
@@ -194,14 +194,14 @@ const Deliveries = () => {
 
             <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg">
                 <Modal.Header closeButton className="border-0 pb-0">
-                    <Modal.Title className="fw-bold">New Dispatch Mission</Modal.Title>
+                    <Modal.Title className="fw-bold">New Delivery</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="p-4">
                     <Form onSubmit={handleCreate}>
                         <Row className="g-3 mb-4">
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label className="small fw-bold text-muted">CUSTOMER PROFILE</Form.Label>
+                                    <Form.Label className="small fw-bold text-muted">CUSTOMER</Form.Label>
                                     <Form.Select
                                         className="bg-light border-0 py-2 rounded-3 shadow-none fw-bold"
                                         required
@@ -218,7 +218,7 @@ const Deliveries = () => {
                             </Col>
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label className="small fw-bold text-muted">ASSIGNED AGENT</Form.Label>
+                                    <Form.Label className="small fw-bold text-muted">DRIVER</Form.Label>
                                     <Form.Select
                                         className="bg-light border-0 py-2 rounded-3 shadow-none fw-bold"
                                         required
@@ -232,7 +232,7 @@ const Deliveries = () => {
                             </Col>
                             <Col md={12}>
                                 <Form.Group>
-                                    <Form.Label className="small fw-bold text-muted">DISPATCH ADDRESS</Form.Label>
+                                    <Form.Label className="small fw-bold text-muted">DELIVERY ADDRESS</Form.Label>
                                     <Form.Control
                                         as="textarea"
                                         className="bg-light border-0 py-2 rounded-3 shadow-none fw-bold"
@@ -245,7 +245,7 @@ const Deliveries = () => {
                             </Col>
                             <Col md={12}>
                                 <Form.Group>
-                                    <Form.Label className="small fw-bold text-muted">OPERATIONAL NOTES</Form.Label>
+                                    <Form.Label className="small fw-bold text-muted">NOTES</Form.Label>
                                     <Form.Control
                                         as="textarea"
                                         className="bg-light border-0 py-2 rounded-3 shadow-none fw-bold"
@@ -260,10 +260,10 @@ const Deliveries = () => {
 
                         <div className="d-grid gap-2">
                             <Button variant="primary" type="submit" size="lg" className="py-3 rounded-4 fw-bold shadow-lg" disabled={submitting}>
-                                {submitting ? 'Initializing Dispatch...' : 'Confirm Mission Assignment'}
+                                {submitting ? 'Creating Delivery...' : 'Assign Delivery'}
                             </Button>
                             <Button variant="link" className="text-muted text-decoration-none fw-bold small" onClick={() => setShowModal(false)}>
-                                Cancel Operation
+                                Cancel
                             </Button>
                         </div>
                     </Form>

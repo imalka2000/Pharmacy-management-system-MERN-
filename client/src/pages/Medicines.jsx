@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import apiClient from '../api-request/config';
+import apiClient, { BASE_URL } from '../api-request/config';
 import useAuth from '../hooks/useAuth';
 import { Modal, Button, Form, Table, Card, Spinner, Row, Col, Badge, InputGroup } from 'react-bootstrap';
 import toast from 'react-hot-toast';
@@ -29,7 +28,7 @@ const Medicines = () => {
             setMedicines(data);
         } catch (error) {
             console.error('Inventory sync error:', error);
-            toast.error('Failed to rationalize inventory nodes');
+            toast.error('Failed to update inventory');
         } finally {
             setLoading(false);
         }
@@ -37,13 +36,13 @@ const Medicines = () => {
 
     const handleDelete = async (e, id) => {
         e.stopPropagation();
-        if (window.confirm('Are you sure you want to terminate this inventory node?')) {
+        if (window.confirm('Are you sure you want to remove this medicine?')) {
             try {
                 await apiClient.delete(`/medicines/${id}`);
-                toast.success('Inventory node successfully purged');
+                toast.success('Medicine successfully removed');
                 fetchMedicines();
             } catch (error) {
-                toast.error('Termination sequence interrupted');
+                toast.error('Failed to delete medicine');
             }
         }
     };
@@ -61,9 +60,9 @@ const Medicines = () => {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             setFormData({ ...formData, imageUrl: data });
-            toast.success('Visual artifact successfully uploaded');
+            toast.success('Image uploaded successfully');
         } catch (error) {
-            toast.error('Artifact transmission failed');
+            toast.error('Failed to upload image');
         } finally {
             setUploading(false);
         }
@@ -74,11 +73,11 @@ const Medicines = () => {
         try {
             await apiClient.post('/medicines', formData);
             setShowAddModal(false);
-            toast.success('New pharmaceutical identity established');
+            toast.success('Medicine added successfully');
             fetchMedicines();
             setFormData({ name: '', batchNumber: '', expiryDate: '', price: '', quantity: '', manufacturer: '', imageUrl: '' });
         } catch (error) {
-            toast.error('Protocol failure during establishing node');
+            toast.error('Failed to add medicine');
         }
     };
 
@@ -91,8 +90,8 @@ const Medicines = () => {
         <div className="container-fluid">
             <div className="d-flex flex-wrap justify-content-between align-items-end mb-5 gap-3">
                 <div>
-                    <h1 className="fw-black text-dark m-0 letter-spacing-n1">Inventory Logic</h1>
-                    <p className="text-muted fw-bold small m-0 uppercase opacity-75">Pharmaceutical Asset & Stock Management</p>
+                    <h1 className="fw-black text-dark m-0 letter-spacing-n1">Medicine Inventory</h1>
+                    <p className="text-muted fw-bold small m-0 uppercase opacity-75">Manage medicines and stock levels</p>
                 </div>
                 <div className="d-flex gap-3">
                     <div className="bg-white border rounded-4 shadow-sm p-1 d-flex">
@@ -117,7 +116,7 @@ const Medicines = () => {
                         onClick={() => setShowAddModal(true)}
                         style={{ background: 'linear-gradient(45deg, #212529, #343a40)' }}
                     >
-                        <i className="bi bi-plus-lg me-2 fs-5"></i> Establish Node
+                        <i className="bi bi-plus-lg me-2 fs-5"></i> Add Medicine
                     </Button>
                 </div>
             </div>
@@ -129,7 +128,7 @@ const Medicines = () => {
                             <i className="bi bi-search text-muted"></i>
                         </InputGroup.Text>
                         <Form.Control
-                            placeholder="Identify node by appellation or batch..."
+                            placeholder="Search by medicine name or batch..."
                             className="bg-transparent border-0 py-2 ms-0 shadow-none fw-bold small"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
@@ -141,25 +140,25 @@ const Medicines = () => {
             {loading ? (
                 <div className="text-center py-5">
                     <Spinner animation="grow" variant="primary" />
-                    <p className="mt-3 xxs fw-black text-muted text-uppercase letter-spacing-1">Synchronizing Inventory Matrix...</p>
+                    <p className="mt-3 xxs fw-black text-muted text-uppercase letter-spacing-1">Loading Inventory...</p>
                 </div>
             ) : filteredMedicines.length === 0 ? (
                 <Card className="border-0 shadow-sm rounded-5 py-5 text-center bg-white border">
                     <i className="bi bi-box-seam display-1 text-muted opacity-10 mb-3"></i>
-                    <h4 className="fw-black text-muted">No Nodes Isolated</h4>
-                    <p className="text-muted small uppercase fw-bold letter-spacing-1">The inventory matrix is currently depleted</p>
+                    <h4 className="fw-black text-muted">No Medicines Found</h4>
+                    <p className="text-muted small uppercase fw-bold letter-spacing-1">The inventory is currently empty</p>
                 </Card>
             ) : viewMode === 'list' ? (
                 <Card className="border-0 shadow-sm rounded-5 overflow-hidden bg-white border">
                     <Table hover responsive className="mb-0 align-middle">
                         <thead className="bg-light border-bottom">
                             <tr>
-                                <th className="ps-4 py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Visual ID</th>
-                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Appellation & Batch</th>
-                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Expiry Protocol</th>
-                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Unit Compensation</th>
-                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Volume Status</th>
-                                <th className="pe-4 py-4 text-muted xxs fw-black text-uppercase letter-spacing-1 text-end">Operations</th>
+                                <th className="ps-4 py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Image</th>
+                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Name & Batch</th>
+                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Expiry Date</th>
+                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Unit Price</th>
+                                <th className="py-4 text-muted xxs fw-black text-uppercase letter-spacing-1">Stock Status</th>
+                                <th className="pe-4 py-4 text-muted xxs fw-black text-uppercase letter-spacing-1 text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -173,7 +172,7 @@ const Medicines = () => {
                                         <div className="rounded-4 bg-light d-flex align-items-center justify-content-center overflow-hidden border shadow-inner" style={{ width: '64px', height: '64px' }}>
                                             {med.imageUrl ? (
                                                 <img
-                                                    src={med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5005${med.imageUrl}`}
+                                                    src={med.imageUrl.startsWith('http') ? med.imageUrl : `${BASE_URL}${med.imageUrl}`}
                                                     alt={med.name}
                                                     className="w-100 h-100 object-cover"
                                                     onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.classList.remove('d-none'); }}
@@ -205,7 +204,7 @@ const Medicines = () => {
                                     <td className="pe-4 text-end">
                                         <div className="d-flex justify-content-end gap-2">
                                             <Button variant="outline-dark" size="sm" className="rounded-4 fw-black xxs text-uppercase letter-spacing-1 border-2 py-2 px-3" onClick={(e) => { e.stopPropagation(); /* Edit logic */ }}>
-                                                Modify
+                                            Edit
                                             </Button>
                                             {user.role === 'admin' && (
                                                 <Button variant="outline-danger" size="sm" className="rounded-4 fw-black xxs text-uppercase letter-spacing-1 border-2 py-2 px-2" onClick={(e) => handleDelete(e, med._id)}>
@@ -264,7 +263,7 @@ const Medicines = () => {
 
                                     <div className="d-flex gap-2 pt-2">
                                         <Button variant="outline-dark" size="sm" className="w-100 rounded-4 fw-black xxs text-uppercase letter-spacing-1 py-2 border-2" onClick={(e) => { e.stopPropagation(); /* Edit logic */ }}>
-                                            Configure
+                                            Edit
                                         </Button>
                                         <Button variant="outline-danger" size="sm" className="rounded-4 fw-black xxs border-2 py-2 px-3" onClick={(e) => handleDelete(e, med._id)}>
                                             <i className="bi bi-trash"></i>
@@ -280,10 +279,10 @@ const Medicines = () => {
             {/* Add Medicine Modal */}
             <Modal show={showAddModal} onHide={() => setShowAddModal(false)} centered size="lg" className="border-0">
                 <Modal.Header closeButton className="border-0 pb-0 px-4 pt-4">
-                    <Modal.Title className="fw-black display-6 text-dark letter-spacing-n1">Establish Node</Modal.Title>
+                    <Modal.Title className="fw-black display-6 text-dark letter-spacing-n1">Add Medicine</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="p-4 pt-2">
-                    <p className="text-muted fw-bold small text-uppercase mb-4 letter-spacing-1">Register new inventory asset identity</p>
+                    <p className="text-muted fw-bold small text-uppercase mb-4 letter-spacing-1">Add a new medicine to inventory</p>
                     <Form onSubmit={handleSubmit}>
                         <Row className="g-4 mb-4">
                             <Col lg={4}>
@@ -303,31 +302,31 @@ const Medicines = () => {
                                 <Row className="g-3">
                                     <Col md={12}>
                                         <Form.Group>
-                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Pharmaceutical Appellation</Form.Label>
+                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Medicine Name</Form.Label>
                                             <Form.Control required className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                                         </Form.Group>
                                     </Col>
                                     <Col md={6}>
                                         <Form.Group>
-                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Batch Identification</Form.Label>
+                                <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Batch Number</Form.Label>
                                             <Form.Control required className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.batchNumber} onChange={e => setFormData({ ...formData, batchNumber: e.target.value })} />
                                         </Form.Group>
                                     </Col>
                                     <Col md={6}>
                                         <Form.Group>
-                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Expiry Protocol Date</Form.Label>
+                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Expiry Date</Form.Label>
                                             <Form.Control type="date" required className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.expiryDate} onChange={e => setFormData({ ...formData, expiryDate: e.target.value })} />
                                         </Form.Group>
                                     </Col>
                                     <Col md={6}>
                                         <Form.Group>
-                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Market Compensation ($)</Form.Label>
+                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Price ($)</Form.Label>
                                             <Form.Control type="number" step="0.01" required className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
                                         </Form.Group>
                                     </Col>
                                     <Col md={6}>
                                         <Form.Group>
-                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Inventory Quantity</Form.Label>
+                                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Quantity</Form.Label>
                                             <Form.Control type="number" required className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.quantity} onChange={e => setFormData({ ...formData, quantity: e.target.value })} />
                                         </Form.Group>
                                     </Col>
@@ -336,16 +335,16 @@ const Medicines = () => {
                         </Row>
 
                         <Form.Group className="mb-5">
-                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Manufacturing Component</Form.Label>
+                            <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Manufacturer</Form.Label>
                             <Form.Control className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.manufacturer} onChange={e => setFormData({ ...formData, manufacturer: e.target.value })} />
                         </Form.Group>
 
                         <div className="d-flex gap-3">
                             <Button variant="light" className="w-100 py-3 rounded-4 fw-black text-muted uppercase letter-spacing-1 border" onClick={() => setShowAddModal(false)}>
-                                Abort
+                                Cancel
                             </Button>
                             <Button variant="primary" type="submit" className="w-100 py-3 rounded-4 fw-black uppercase letter-spacing-1 shadow-primary border-0">
-                                Authorize Deployment
+                                Save Medicine
                             </Button>
                         </div>
                     </Form>

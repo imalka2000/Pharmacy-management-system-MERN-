@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import apiClient from '../api-request/config';
+import apiClient, { BASE_URL } from '../api-request/config';
 import useAuth from '../hooks/useAuth';
 import { Row, Col, Badge, Spinner, Modal, Button, Form } from 'react-bootstrap';
 import toast from 'react-hot-toast';
@@ -101,7 +100,7 @@ const Store = () => {
 
     const imgSrc = (med) =>
         med.imageUrl
-            ? (med.imageUrl.startsWith('http') ? med.imageUrl : `http://localhost:5000${med.imageUrl}`)
+            ? (med.imageUrl.startsWith('http') ? med.imageUrl : `${BASE_URL}${med.imageUrl}`)
             : null;
 
     return (

@@ -44,14 +44,14 @@ const Login = () => {
                                 <i className="bi bi-capsule-pill text-primary display-4"></i>
                             </div>
                             <h1 className="text-white fw-black m-0 display-4 letter-spacing-n2">PharmaCare</h1>
-                            <p className="text-white-50 letter-spacing-2 fw-black xxs text-uppercase mt-2 opacity-75">Intelligence Engine & Logistics Control</p>
+                            <p className="text-white-50 letter-spacing-2 fw-black xxs text-uppercase mt-2 opacity-75">Pharmacy Management System</p>
                         </div>
 
                         <Card className="border-0 shadow-2xl rounded-5 overflow-hidden bg-white hover-card transition-slow animate-float">
                             <Card.Body className="p-5">
                                 <div className="mb-5 text-center">
                                     <h3 className="fw-black text-dark mb-2">Secure Access</h3>
-                                    <p className="text-muted fw-bold small text-uppercase letter-spacing-1">Authentication Protocol Required</p>
+                                    <p className="text-muted fw-bold small text-uppercase letter-spacing-1">Login Required</p>
                                 </div>
 
                                 {error && (
@@ -63,7 +63,7 @@ const Login = () => {
 
                                 <Form onSubmit={handleSubmit}>
                                     <Form.Group className="mb-4">
-                                        <Form.Label className="xxs fw-black text-muted mb-2 letter-spacing-1 text-uppercase">Operator Identity</Form.Label>
+                                        <Form.Label className="xxs fw-black text-muted mb-2 letter-spacing-1 text-uppercase">Username</Form.Label>
                                         <InputGroup className="bg-light border rounded-4 overflow-hidden p-1 shadow-inner">
                                             <InputGroup.Text className="bg-transparent border-0 pe-0 ms-2">
                                                 <i className="bi bi-person-badge text-primary opacity-50"></i>
@@ -79,7 +79,7 @@ const Login = () => {
                                     </Form.Group>
 
                                     <Form.Group className="mb-5">
-                                        <Form.Label className="xxs fw-black text-muted mb-2 letter-spacing-1 text-uppercase">Security Key</Form.Label>
+                                        <Form.Label className="xxs fw-black text-muted mb-2 letter-spacing-1 text-uppercase">Password</Form.Label>
                                         <InputGroup className="bg-light border rounded-4 overflow-hidden p-1 shadow-inner">
                                             <InputGroup.Text className="bg-transparent border-0 pe-0 ms-2">
                                                 <i className="bi bi-key text-primary opacity-50"></i>
@@ -105,9 +105,9 @@ const Login = () => {
                                         {loading ? (
                                             <>
                                                 <Spinner size="sm" className="me-2" />
-                                                Decrypting...
+                                                Logging in...
                                             </>
-                                        ) : 'Authorize Entry'}
+                                        ) : 'Login'}
                                     </Button>
 
                                     <div className="text-center">
@@ -118,7 +118,7 @@ const Login = () => {
                         </Card>
 
                         <div className="text-center mt-5">
-                            <p className="text-white-50 xxs fw-bold letter-spacing-1 m-0 text-uppercase">&copy; 2026 PharmaCare OS. All functional nodes operational.</p>
+                            <p className="text-white-50 xxs fw-bold letter-spacing-1 m-0 text-uppercase">&copy; 2026 PharmaCare. All systems active.</p>
                         </div>
                     </Col>
                 </Row>

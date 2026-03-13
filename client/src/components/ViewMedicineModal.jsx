@@ -1,4 +1,5 @@
 import { Modal, Button, ListGroup } from 'react-bootstrap';
+import { BASE_URL } from '../api-request/config';
 
 const ViewMedicineModal = ({ medicine, onClose }) => {
     if (!medicine) return null;
@@ -12,7 +13,7 @@ const ViewMedicineModal = ({ medicine, onClose }) => {
                 {medicine.imageUrl && (
                     <div className="rounded-4 bg-light overflow-hidden border mb-4 text-center p-3" style={{ height: '220px' }}>
                         <img
-                            src={medicine.imageUrl.startsWith('http') ? medicine.imageUrl : `http://localhost:5005${medicine.imageUrl}`}
+                            src={medicine.imageUrl.startsWith('http') ? medicine.imageUrl : `${BASE_URL}${medicine.imageUrl}`}
                             alt={medicine.name}
                             className="h-100 w-auto object-contain"
                         />
