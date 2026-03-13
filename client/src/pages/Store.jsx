@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import apiClient, { BASE_URL } from '../api-request/config';
 import useAuth from '../hooks/useAuth';
 import { Row, Col, Badge, Spinner, Modal, Button, Form } from 'react-bootstrap';
@@ -85,9 +86,8 @@ const Store = () => {
             setCart([]);
             setCheckoutForm({ name: '', phone: '', address: '', notes: '' });
         } catch (err) {
-            // If sales API doesn't accept this payload, just simulate success
-            setOrderPlaced(true);
-            setCart([]);
+            console.error(err);
+            toast.error(err.response?.data?.message || 'Failed to place order');
         } finally {
             setPlacing(false);
         }

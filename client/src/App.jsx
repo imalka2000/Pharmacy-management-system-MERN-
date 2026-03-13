@@ -17,6 +17,8 @@ import Users from './pages/Users';
 import Employees from './pages/Employees';
 import Profile from './pages/Profile';
 import Store from './pages/Store';
+import Bills from './pages/Bills';
+import Administration from './pages/Administration';
 import useAuth from './hooks/useAuth';
 
 const PrivateRoute = ({ children, allowedRoles }) => {
@@ -69,6 +71,7 @@ function App() {
 
         {/* Staff routes */}
         <Route path="medicines" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Medicines /></PrivateRoute>} />
+        <Route path="bills" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Bills /></PrivateRoute>} />
         <Route path="sales" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Sales /></PrivateRoute>} />
         <Route path="prescriptions" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST, ROLES.USER]}><Prescriptions /></PrivateRoute>} />
         <Route path="supply-requests" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><SupplyChain /></PrivateRoute>} />
@@ -79,6 +82,7 @@ function App() {
         <Route path="suppliers" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Suppliers /></PrivateRoute>} />
         <Route path="users" element={<PrivateRoute allowedRoles={[ROLES.ADMIN]}><Users /></PrivateRoute>} />
         <Route path="employees" element={<PrivateRoute allowedRoles={[ROLES.ADMIN]}><Employees /></PrivateRoute>} />
+        <Route path="administration" element={<PrivateRoute allowedRoles={[ROLES.ADMIN]}><Administration /></PrivateRoute>} />
         <Route path="profile" element={<Profile />} />
         <Route path="reports" element={<PrivateRoute allowedRoles={[ROLES.ADMIN]}><Reports /></PrivateRoute>} />
       </Route>

@@ -81,54 +81,18 @@ const Nav = ({ isOpen }) => {
           {/* ---- STAFF / ADMIN MENU ---- */}
           {isStaff && (
             <>
-              <p className="sidebar-section-label px-4 pt-3 pb-1 text-uppercase text-white-50 fw-semibold" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
-                Main
-              </p>
               <NavItem to="/dashboard" icon="bi-speedometer2" label="Dashboard" />
               <NavItem to="/store" icon="bi-shop" label="Store" />
               <NavItem to="/medicines" icon="bi-capsule" label="Inventory" />
-              <NavItem to="/sales" icon="bi-cart-check" label="Sales & Billing" />
+              <NavItem to="/sales" icon="bi-cart-check" label="Sales" />
+              <NavItem to="/bills" icon="bi-receipt" label="Billing" />
               <NavItem to="/prescriptions" icon="bi-receipt" label="Prescriptions" />
               <NavItem to="/supply-requests" icon="bi-truck" label="Supply Chain" />
               <NavItem to="/deliveries" icon="bi-bicycle" label="Deliveries" />
               <NavItem to="/suppliers" icon="bi-building" label="Suppliers" />
 
-              {isAdmin && (
-                <>
-                  <p className="sidebar-section-label px-4 pt-3 pb-1 text-uppercase text-white-50 fw-semibold" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
-                    Administration
-                  </p>
+              <NavItem to="/administration" icon="bi-shield-lock" label="Administration" />
 
-                  <button
-                    className={`nav-link d-flex align-items-center gap-3 w-100 border-0 bg-transparent text-start ${openGroup === "admin" ? "active-parent" : ""}`}
-                    onClick={() => toggleGroup("admin")}
-                  >
-                    <span className="icon-holder">
-                      <i className="bi bi-shield-lock" />
-                    </span>
-                    <span className="title flex-grow-1">Admin</span>
-                    <i className={`bi ${openGroup === "admin" ? "bi-chevron-down" : "bi-chevron-right"} small me-1`} />
-                  </button>
-
-                  <Collapse in={openGroup === "admin"}>
-                    <div className="navigation-collapse">
-                      <NavLink to="/users" className={({ isActive }) => `nav-link d-block ${isActive ? "active" : ""}`}>
-                        User Accounts
-                      </NavLink>
-                      <NavLink to="/employees" className={({ isActive }) => `nav-link d-block ${isActive ? "active" : ""}`}>
-                        Staff Directory
-                      </NavLink>
-                      <NavLink to="/reports" className={({ isActive }) => `nav-link d-block ${isActive ? "active" : ""}`}>
-                        System Reports
-                      </NavLink>
-                    </div>
-                  </Collapse>
-                </>
-              )}
-
-              <p className="sidebar-section-label px-4 pt-3 pb-1 text-uppercase text-white-50 fw-semibold" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
-                Engagement
-              </p>
               <NavItem to="/promotions" icon="bi-megaphone" label="Promotions" />
               <NavItem to="/feedback" icon="bi-chat-heart" label="Feedback" />
               <NavItem to="/profile" icon="bi-person" label="My Profile" />
