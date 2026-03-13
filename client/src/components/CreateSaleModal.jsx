@@ -11,6 +11,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
     const [cart, setCart] = useState([]);
     const [loading, setLoading] = useState(false);
     const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', address: '' });
+    const [orderInfo, setOrderInfo] = useState({ subject: '', dueDate: '', notes: '' });
     
     const searchInputRef = useRef(null);
 
@@ -109,17 +110,21 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                 customerName: customerInfo.name,
                 customerPhone: customerInfo.phone,
                 customerAddress: customerInfo.address,
+                subject: orderInfo.subject,
+                dueDate: orderInfo.dueDate,
+                notes: orderInfo.notes,
                 tax: 0,
                 discount: 0,
-                source: 'pos'
+                source: 'pos',
+                status: 'Pending'
             };
             await apiClient.post('/sales', payload);
-            toast.success('Sale Processed Successfully');
+            toast.success('Sales Order Created Successfully');
             onSuccess();
             onClose();
         } catch (error) {
             console.error(error);
-            toast.error(error.response?.data?.message || 'Checkout Failed');
+            toast.error(error.response?.data?.message || 'Failed to create order');
         } finally {
             setLoading(false);
         }
@@ -235,15 +240,15 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                             </Card>
                         </div>
 
-                        <div>
+                        <div className="mb-4">
                             <h6 className="fw-bold text-uppercase text-muted small mb-3">Customer Information</h6>
-                            <Card className="border-0 shadow-sm rounded-4 p-4">
+                            <Card className="border-0 shadow-sm rounded-4 p-4 mb-4">
                                 <Row className="g-3">
                                     <Col sm={6}>
                                         <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Customer Name</Form.Label>
                                         <Form.Control
                                             placeholder="Guest Customer"
-                                            className="bg-light border-0 py-2 rounded-3 shadow-none"
+                                            className="bg-light border-0 py-2 rounded-3 shadow-none fw-medium"
                                             value={customerInfo.name}
                                             onChange={e => setCustomerInfo({...customerInfo, name: e.target.value})}
                                         />
@@ -252,9 +257,46 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                                         <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Phone Number</Form.Label>
                                         <Form.Control
                                             placeholder="+94 XXX XXX XXX"
-                                            className="bg-light border-0 py-2 rounded-3 shadow-none"
+                                            className="bg-light border-0 py-2 rounded-3 shadow-none fw-medium"
                                             value={customerInfo.phone}
                                             onChange={e => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                                        />
+                                    </Col>
+                                </Row>
+                            </Card>
+                        </div>
+
+                        <div>
+                            <h6 className="fw-bold text-uppercase text-muted small mb-3">Order Details</h6>
+                            <Card className="border-0 shadow-sm rounded-4 p-4">
+                                <Row className="g-3">
+                                    <Col sm={8}>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Subject / Reference</Form.Label>
+                                        <Form.Control
+                                            placeholder="e.g. Monthly Supply for Ward A"
+                                            className="bg-light border-0 py-2 rounded-3 shadow-none fw-medium"
+                                            value={orderInfo.subject}
+                                            onChange={e => setOrderInfo({...orderInfo, subject: e.target.value})}
+                                        />
+                                    </Col>
+                                    <Col sm={4}>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Due Date</Form.Label>
+                                        <Form.Control
+                                            type="date"
+                                            className="bg-light border-0 py-2 rounded-3 shadow-none fw-medium"
+                                            value={orderInfo.dueDate}
+                                            onChange={e => setOrderInfo({...orderInfo, dueDate: e.target.value})}
+                                        />
+                                    </Col>
+                                    <Col sm={12}>
+                                        <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Notes</Form.Label>
+                                        <Form.Control
+                                            as="textarea"
+                                            rows={2}
+                                            placeholder="Special instructions or internal notes..."
+                                            className="bg-light border-0 py-2 rounded-3 shadow-none fw-medium"
+                                            value={orderInfo.notes}
+                                            onChange={e => setOrderInfo({...orderInfo, notes: e.target.value})}
                                         />
                                     </Col>
                                 </Row>

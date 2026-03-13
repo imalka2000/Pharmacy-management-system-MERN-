@@ -31,6 +31,8 @@ const deliveryRoutes = require('./routes/deliveryRoutes');
 const promotionRoutes = require('./routes/promotionRoutes'); // Promotions
 const feedbackRoutes = require('./routes/feedbackRoutes'); // Feedback
 const packageRoutes = require('./routes/packageRoutes'); // Packages
+const transactionRoutes = require('./routes/transactionRoutes');
+const purchaseOrderRoutes = require('./routes/purchaseOrderRoutes');
 const { seedAdmin } = require('./controllers/authController');
 
 app.use('/api/auth', authRoutes);
@@ -45,6 +47,8 @@ app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/promotions', promotionRoutes); // Mount promotions
 app.use('/api/feedback', feedbackRoutes); // Mount feedback
 app.use('/api/packages', packageRoutes); // Mount packages
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/purchase-orders', purchaseOrderRoutes);
 
 const dirname = path.resolve();
 app.use('/uploads', express.static(path.join(dirname, '/uploads'))); // Make uploads folder static

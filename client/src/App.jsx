@@ -19,6 +19,8 @@ import Profile from './pages/Profile';
 import Store from './pages/Store';
 import Bills from './pages/Bills';
 import Administration from './pages/Administration';
+import PurchaseOrders from './pages/PurchaseOrders';
+import Transactions from './pages/Transactions';
 import useAuth from './hooks/useAuth';
 
 const PrivateRoute = ({ children, allowedRoles }) => {
@@ -72,6 +74,8 @@ function App() {
         {/* Staff routes */}
         <Route path="medicines" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Medicines /></PrivateRoute>} />
         <Route path="bills" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Bills /></PrivateRoute>} />
+        <Route path="purchase-orders" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><PurchaseOrders /></PrivateRoute>} />
+        <Route path="transactions" element={<PrivateRoute allowedRoles={[ROLES.ADMIN]}><Transactions /></PrivateRoute>} />
         <Route path="sales" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><Sales /></PrivateRoute>} />
         <Route path="prescriptions" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST, ROLES.USER]}><Prescriptions /></PrivateRoute>} />
         <Route path="supply-requests" element={<PrivateRoute allowedRoles={[ROLES.ADMIN, ROLES.PHARMACIST]}><SupplyChain /></PrivateRoute>} />

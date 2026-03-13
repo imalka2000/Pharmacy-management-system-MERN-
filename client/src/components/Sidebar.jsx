@@ -10,8 +10,10 @@ const Sidebar = () => {
         { title: 'Dashboard', path: '/dashboard', icon: 'bi-grid-1x2-fill' },
         { title: 'Store', path: '/store', icon: 'bi-shop' },
         { title: 'Inventory', path: '/medicines', icon: 'bi-capsule' },
-        { title: 'Sales', path: '/sales', icon: 'bi-cart-check-fill' },
-        { title: 'Billing', path: '/bills', icon: 'bi-receipt-cutoff' },
+        { title: 'Sales Order', path: '/sales', icon: 'bi-cart-check-fill' }, // Renamed for clarity
+        { title: 'Invoices', path: '/bills', icon: 'bi-receipt-cutoff' }, // Renamed from Billing
+        { title: 'Purchase Orders', path: '/purchase-orders', icon: 'bi-briefcase-fill' }, // New
+        { title: 'Transactions', path: '/transactions', icon: 'bi-cash-stack' }, // New
         { title: 'Prescriptions', path: '/prescriptions', icon: 'bi-file-earmark-medical' },
         { title: 'Supply Chain', path: '/supply-requests', icon: 'bi-diagram-3-fill' },
         { title: 'Deliveries', path: '/deliveries', icon: 'bi-truck' },
