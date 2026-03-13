@@ -40,16 +40,24 @@ const createSale = async (req, res) => {
             });
         }
 
-        const grandTotal = totalAmount + tax - discount;
+        const grandTotal = totalAmount + (tax || 0) - (discount || 0);
 
         const sale = new Sale({
             invoiceNumber: `INV-${Date.now()}`,
-            pharmacist: req.user._id,
+            pharmacist: req.user.role === 'user' ? null : req.user._id,
+            customer: req.user.role === 'user' ? req.user._id : req.body.customerId,
+            customerInfo: {
+                name: req.body.customerName,
+                phone: req.body.customerPhone,
+                address: req.body.customerAddress
+            },
+            source: req.body.source || 'pos',
             items: saleItems,
             totalAmount,
             tax: tax || 0,
             discount: discount || 0,
-            grandTotal
+            grandTotal,
+            notes: req.body.notes
         });
 
         const createdSale = await sale.save();

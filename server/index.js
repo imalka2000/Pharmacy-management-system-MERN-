@@ -30,6 +30,7 @@ const supplyRequestRoutes = require('./routes/supplyRequestRoutes');
 const deliveryRoutes = require('./routes/deliveryRoutes');
 const promotionRoutes = require('./routes/promotionRoutes'); // Promotions
 const feedbackRoutes = require('./routes/feedbackRoutes'); // Feedback
+const packageRoutes = require('./routes/packageRoutes'); // Packages
 const { seedAdmin } = require('./controllers/authController');
 
 app.use('/api/auth', authRoutes);
@@ -43,6 +44,7 @@ app.use('/api/supply-requests', supplyRequestRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/promotions', promotionRoutes); // Mount promotions
 app.use('/api/feedback', feedbackRoutes); // Mount feedback
+app.use('/api/packages', packageRoutes); // Mount packages
 
 const dirname = path.resolve();
 app.use('/uploads', express.static(path.join(dirname, '/uploads'))); // Make uploads folder static
