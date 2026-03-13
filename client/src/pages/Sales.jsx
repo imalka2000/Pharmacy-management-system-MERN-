@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../api-request/config';
 import useAuth from '../hooks/useAuth';
-import { Button, Table, Card, Spinner } from 'react-bootstrap';
-import CreateSaleModal from '../components/CreateSaleModal';
+import { Button, Table, Card, Spinner, Badge, InputGroup, Form } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import ViewSaleModal from '../components/ViewSaleModal';
 import toast from 'react-hot-toast';
 
 const Sales = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [sales, setSales] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
     const [selectedSale, setSelectedSale] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -24,97 +25,125 @@ const Sales = () => {
             setSales(data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         } catch (error) {
             console.error(error);
-            toast.error('Failed to fetch sales history');
+            toast.error('Failed to fetch billing history');
         } finally {
             setLoading(false);
         }
     };
 
+    const filteredSales = sales.filter(sale => 
+        sale.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (sale.customerInfo?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (sale.customerInfo?.phone || '').includes(searchTerm)
+    );
+
     return (
-        <div className="px-0">
-            <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="px-0 animate__animated animate__fadeIn">
+            <div className="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded-4 shadow-sm border border-light">
                 <div>
-                    <h2 className="fw-bold text-dark m-0">Sales History</h2>
-                    <p className="text-muted small m-0">View and manage sale transactions</p>
+                    <h2 className="fw-black text-dark m-0 d-flex align-items-center">
+                        <i className="bi bi-cart-check-fill text-primary me-3 fs-2"></i>
+                        Sales Orders
+                    </h2>
+                    <p className="text-muted small m-0">Monitor order fulfillment and transaction statuses</p>
                 </div>
-                <Button
-                    variant="primary"
-                    className="shadow-sm rounded-3 d-flex align-items-center px-4 py-2"
-                    onClick={() => setIsModalOpen(true)}
-                >
-                    <i className="bi bi-cart-plus-fill me-2"></i> New Sale
-                </Button>
+                <div className="d-flex gap-2">
+                    <Button
+                        variant="light"
+                        className="shadow-sm rounded-4 px-4 py-3 fw-bold border"
+                        onClick={fetchSales}
+                    >
+                        <i className="bi bi-arrow-clockwise me-2"></i> Refresh
+                    </Button>
+                </div>
             </div>
 
-            {loading ? (
-                <div className="text-center py-5">
-                    <Spinner animation="border" variant="primary" />
-                    <p className="mt-2 text-muted">Loading sales history...</p>
-                </div>
-            ) : sales.length === 0 ? (
-                <div className="text-center py-5 bg-white rounded-4 shadow-sm border">
-                    <i className="bi bi-receipt fs-1 text-muted opacity-25"></i>
-                    <p className="mt-3 text-muted">No sales records found.</p>
-                </div>
-            ) : (
-                <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
-                    <Table hover responsive className="mb-0">
-                        <thead className="bg-light">
-                            <tr>
-                                <th className="ps-4 py-3 text-muted small fw-bold text-uppercase">Invoice</th>
-                                <th className="py-3 text-muted small fw-bold text-uppercase">Date & Time</th>
-                                <th className="py-3 text-muted small fw-bold text-uppercase">Pharmacist</th>
-                                <th className="py-3 text-muted small fw-bold text-uppercase text-center">Items</th>
-                                <th className="pe-4 py-3 text-end text-muted small fw-bold text-uppercase">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sales.map(sale => (
-                                <tr
-                                    key={sale._id}
-                                    className="align-middle"
-                                    style={{ cursor: 'pointer' }}
-                                    onClick={() => setSelectedSale(sale)}
-                                >
-                                    <td className="ps-4">
-                                        <span className="fw-bold text-dark">{sale.invoiceNumber}</span>
-                                    </td>
-                                    <td>
-                                        <div className="text-muted d-flex align-items-center">
-                                            <i className="bi bi-calendar3 text-primary opacity-50 me-2"></i>
-                                            {new Date(sale.createdAt).toLocaleDateString()}
-                                            <span className="ms-2 small opacity-75">{new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="text-muted d-flex align-items-center">
-                                            <i className="bi bi-person text-primary opacity-50 me-2"></i>
-                                            {sale.pharmacist?.username || 'System'}
-                                        </div>
-                                    </td>
-                                    <td className="text-center">
-                                        <span className="badge bg-light text-dark border px-3 py-2 rounded-pill">
-                                            {sale.items.length} {sale.items.length === 1 ? 'Item' : 'Items'}
-                                        </span>
-                                    </td>
-                                    <td className="pe-4 text-end">
-                                        <span className="fw-bold text-primary fs-5">
-                                            ${sale.grandTotal.toFixed(2)}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
-                </Card>
-            )}
+            <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                <Card.Body className="p-0">
+                    <div className="p-4 bg-light border-bottom border-light">
+                        <InputGroup className="bg-white rounded-3 shadow-sm border-0 overflow-hidden px-2" style={{ maxWidth: '400px' }}>
+                            <InputGroup.Text className="bg-transparent border-0 pe-0">
+                                <i className="bi bi-search text-muted"></i>
+                            </InputGroup.Text>
+                            <Form.Control
+                                placeholder="Filter orders..."
+                                className="bg-transparent border-0 py-3 shadow-none fw-bold small"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                            />
+                        </InputGroup>
+                    </div>
 
-            {isModalOpen && (
-                <CreateSaleModal
-                    onClose={() => setIsModalOpen(false)}
-                    onSuccess={fetchSales}
-                />
-            )}
+                    {loading ? (
+                        <div className="text-center py-5">
+                            <Spinner animation="grow" variant="primary" />
+                            <p className="mt-3 fw-bold text-muted">Loading orders...</p>
+                        </div>
+                    ) : filteredSales.length === 0 ? (
+                        <div className="text-center py-5">
+                            <i className="bi bi-receipt fs-1 text-muted opacity-25"></i>
+                            <p className="mt-3 text-muted fw-bold">No orders found.</p>
+                        </div>
+                    ) : (
+                        <Table hover responsive className="mb-0">
+                            <thead className="bg-light">
+                                <tr>
+                                    <th className="ps-4 py-4 text-muted small fw-black text-uppercase letter-spacing-1 border-0">Invoice</th>
+                                    <th className="py-4 text-muted small fw-black text-uppercase letter-spacing-1 border-0">Order Date</th>
+                                    <th className="py-4 text-muted small fw-black text-uppercase letter-spacing-1 border-0">Customer</th>
+                                    <th className="py-4 text-muted small fw-black text-uppercase letter-spacing-1 border-0 text-center">Status</th>
+                                    <th className="pe-4 py-4 text-end text-muted small fw-black text-uppercase letter-spacing-1 border-0">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody className="border-top-0">
+                                {filteredSales.map(sale => (
+                                    <tr
+                                        key={sale._id}
+                                        className="align-middle border-bottom border-light transition-all"
+                                        style={{ cursor: 'pointer' }}
+                                        onClick={() => setSelectedSale(sale)}
+                                    >
+                                        <td className="ps-4 py-4">
+                                            <Badge bg="primary-subtle" text="primary" className="fw-black px-3 py-2 rounded-2 fs-6 border border-primary-subtle">
+                                                {sale.invoiceNumber}
+                                            </Badge>
+                                        </td>
+                                        <td className="py-4">
+                                            <div className="text-dark fw-bold">{new Date(sale.createdAt).toLocaleDateString()}</div>
+                                            <small className="text-muted">{new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                                        </td>
+                                        <td className="py-4">
+                                            <div className="d-flex align-items-center">
+                                                <div className="bg-light p-2 rounded-circle me-3 border">
+                                                    <i className="bi bi-person text-secondary"></i>
+                                                </div>
+                                                <div>
+                                                    <div className="fw-bold text-dark">{sale.customerInfo?.name || 'Guest Customer'}</div>
+                                                    <small className="text-muted">{sale.customerInfo?.phone || 'No Contact'}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="py-4 text-center">
+                                            <Badge 
+                                                bg={sale.status === 'Completed' ? 'success' : sale.status === 'Packaged' ? 'info' : 'warning'} 
+                                                className={`rounded-pill px-4 py-2 fw-black text-uppercase letter-spacing-1 fs-xs border border-${sale.status === 'Completed' ? 'success' : sale.status === 'Packaged' ? 'info' : 'warning'} border-opacity-25`}
+                                                style={{ minWidth: '100px' }}
+                                            >
+                                                {sale.status || 'Pending'}
+                                            </Badge>
+                                        </td>
+                                        <td className="pe-4 py-4 text-end">
+                                            <span className="fw-black text-primary fs-4">
+                                                ${sale.grandTotal.toFixed(2)}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    )}
+                </Card.Body>
+            </Card>
 
             {selectedSale && (
                 <ViewSaleModal

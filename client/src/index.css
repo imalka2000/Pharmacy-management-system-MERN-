@@ -589,3 +589,61 @@ body {
     margin-left: 0 !important;
   }
 }
+
+/* =============================================
+   POS & ANIMATIONS
+   ============================================= */
+.animate__animated {
+  animation-duration: 0.4s;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate__fadeIn {
+  animation-name: fadeIn;
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translate3d(20px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate__fadeInRight {
+  animation-name: fadeInRight;
+}
+
+.animate__faster {
+  animation-duration: 0.25s;
+}
+
+.cart-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cart-list::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.05);
+  border-radius: 10px;
+}
+
+.cart-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.1);
+}
+
+.line-through {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.border-dashed {
+  border-style: dashed !important;
+}
