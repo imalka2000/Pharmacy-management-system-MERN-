@@ -14,7 +14,7 @@ const Dashboard = () => {
                 const { data } = await apiClient.get('/reports/dashboard');
                 setStats(data);
             } catch (error) {
-                console.error('Data acquisition error:', error);
+                console.error('Failed to load dashboard data:', error);
             }
         };
         if (user?.token && !stats) fetchStats();

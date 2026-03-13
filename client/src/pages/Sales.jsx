@@ -35,7 +35,7 @@ const Sales = () => {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 className="fw-bold text-dark m-0">Sales History</h2>
-                    <p className="text-muted small m-0">Review and manage recent transactions</p>
+                    <p className="text-muted small m-0">View and manage sale transactions</p>
                 </div>
                 <Button
                     variant="primary"
@@ -49,7 +49,7 @@ const Sales = () => {
             {loading ? (
                 <div className="text-center py-5">
                     <Spinner animation="border" variant="primary" />
-                    <p className="mt-2 text-muted">Loading transaction records...</p>
+                    <p className="mt-2 text-muted">Loading sales history...</p>
                 </div>
             ) : sales.length === 0 ? (
                 <div className="text-center py-5 bg-white rounded-4 shadow-sm border">
@@ -61,11 +61,11 @@ const Sales = () => {
                     <Table hover responsive className="mb-0">
                         <thead className="bg-light">
                             <tr>
-                                <th className="ps-4 py-3 text-muted small fw-bold text-uppercase">Invoice #</th>
+                                <th className="ps-4 py-3 text-muted small fw-bold text-uppercase">Invoice</th>
                                 <th className="py-3 text-muted small fw-bold text-uppercase">Date & Time</th>
                                 <th className="py-3 text-muted small fw-bold text-uppercase">Pharmacist</th>
                                 <th className="py-3 text-muted small fw-bold text-uppercase text-center">Items</th>
-                                <th className="pe-4 py-3 text-end text-muted small fw-bold text-uppercase">Total Amount</th>
+                                <th className="pe-4 py-3 text-end text-muted small fw-bold text-uppercase">Total</th>
                             </tr>
                         </thead>
                         <tbody>

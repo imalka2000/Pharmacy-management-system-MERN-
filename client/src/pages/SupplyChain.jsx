@@ -24,7 +24,7 @@ const SupplyChain = () => {
             setRequests(data);
         } catch (error) {
             console.error('Error fetching supply requests:', error);
-            toast.error('Inventory Sync Error: Failed to load supplies');
+            toast.error('Failed to load supply requests');
         } finally {
             setLoading(false);
         }
@@ -35,11 +35,11 @@ const SupplyChain = () => {
             await apiClient.put(`/supply-requests/${id}/status`, { status });
             toast.success(`Request status: ${status}`);
             if (status === 'Received') {
-                toast.success('Inventory stock auto-reconciled');
+                toast.success('Inventory stock updated');
             }
             fetchRequests();
         } catch (error) {
-            toast.error('Control error: Failed to sync status');
+            toast.error('Failed to update status');
         }
     };
 
@@ -64,15 +64,15 @@ const SupplyChain = () => {
         <Container fluid>
             <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                 <div>
-                    <h2 className="fw-bold text-dark m-0">Supply Pipeline</h2>
-                    <p className="text-muted small m-0">Orchestrate inventory replenishment and supplier coordination</p>
+                    <h2 className="fw-bold text-dark m-0">Supply Chain</h2>
+                    <p className="text-muted small m-0">Manage medicine stock and supplier coordination</p>
                 </div>
                 <Button
                     variant="primary"
                     className="shadow-sm rounded-3 d-flex align-items-center px-4 py-2"
                     onClick={() => setShowModal(true)}
                 >
-                    <i className="bi bi-plus-lg me-2"></i> New Resource Request
+                    <i className="bi bi-plus-lg me-2"></i> New Request
                 </Button>
             </div>
 
@@ -83,7 +83,7 @@ const SupplyChain = () => {
                             <i className="bi bi-search text-muted"></i>
                         </InputGroup.Text>
                         <Form.Control
-                            placeholder="Identify medicine or supplier..."
+                            placeholder="Search medicine or supplier..."
                             className="border-0 shadow-none py-2 fw-medium"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
@@ -96,11 +96,11 @@ const SupplyChain = () => {
                         value={filterStatus}
                         onChange={e => setFilterStatus(e.target.value)}
                     >
-                        <option value="All">All Pipelines</option>
+                        <option value="All">All Requests</option>
                         <option value="Pending">Pending</option>
-                        <option value="Sent to Supplier">Dispatched</option>
-                        <option value="Received">Reconciled</option>
-                        <option value="Cancelled">Terminated</option>
+                        <option value="Sent to Supplier">Sent</option>
+                        <option value="Received">Received</option>
+                        <option value="Cancelled">Cancelled</option>
                     </Form.Select>
                 </Col>
             </Row>
@@ -109,14 +109,14 @@ const SupplyChain = () => {
                 {loading ? (
                     <Col xs={12} className="text-center py-5">
                         <Spinner animation="border" variant="primary" />
-                        <p className="mt-3 text-muted fw-medium">Syncing with global logistics...</p>
+                        <p className="mt-3 text-muted fw-medium">Loading supply data...</p>
                     </Col>
                 ) : filteredRequests.length === 0 ? (
                     <Col xs={12}>
                         <Card className="border-0 shadow-sm rounded-4 text-center py-5 bg-white border border-dashed">
                             <Card.Body>
                                 <i className="bi bi-diagram-3 fs-1 text-muted opacity-25 d-block mb-3"></i>
-                                <h5 className="fw-bold text-muted">No Pipeline Data Found</h5>
+                                <h5 className="fw-bold text-muted">No supply requests found</h5>
                             </Card.Body>
                         </Card>
                     </Col>
@@ -131,25 +131,25 @@ const SupplyChain = () => {
                                             <Badge bg={style.bg} text={style.text} className="px-3 py-2 rounded-pill fw-bold border border-white shadow-sm">
                                                 <i className={`bi ${style.icon} me-1`}></i> {req.status}
                                             </Badge>
-                                            <div className="text-muted xxs fw-bold uppercase letter-spacing-1">REF: {req._id.slice(-6).toUpperCase()}</div>
+                                            <div className="text-muted xxs fw-bold uppercase letter-spacing-1">ID: {req._id.slice(-6).toUpperCase()}</div>
                                         </div>
 
                                         <div className="mb-4">
-                                            <h5 className="fw-black text-dark mb-1">{req.medicine?.name || 'Unidentified Compound'}</h5>
+                                            <h5 className="fw-black text-dark mb-1">{req.medicine?.name || 'Unknown Medicine'}</h5>
                                             <div className="d-flex align-items-center">
-                                                <Badge bg="primary" className="rounded-pill px-2 py-1 me-2">QTY: {req.quantity}</Badge>
-                                                <small className="text-muted fw-bold">RESOURCE UNIT</small>
+                                                <Badge bg="primary" className="rounded-pill px-2 py-1 me-2">Qty: {req.quantity}</Badge>
+                                                <small className="text-muted fw-bold">Units</small>
                                             </div>
                                         </div>
 
                                         <Card className="bg-light border-0 rounded-4 p-3 mb-4 flex-grow-1 border border-primary border-opacity-10">
                                             <Row className="g-2">
                                                 <Col xs={6}>
-                                                    <label className="xxs fw-bold text-muted text-uppercase mb-1 d-block">SUPPLIER ENTITY</label>
+                                                    <label className="xxs fw-bold text-muted text-uppercase mb-1 d-block">Supplier</label>
                                                     <p className="text-dark fw-bold small mb-0 lh-sm">{req.supplier?.name || 'Local Warehouse'}</p>
                                                 </Col>
                                                 <Col xs={6}>
-                                                    <label className="xxs fw-bold text-muted text-uppercase mb-1 d-block">EXPECTED ARRIVAL</label>
+                                                    <label className="xxs fw-bold text-muted text-uppercase mb-1 d-block">Expected Arrival</label>
                                                     <p className="text-dark fw-bold small mb-0 lh-sm">
                                                         {req.expectedDate ? new Date(req.expectedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'TBD'}
                                                     </p>
@@ -166,12 +166,12 @@ const SupplyChain = () => {
                                         <div className="mt-auto d-flex gap-2 pt-3 border-top border-light">
                                             {req.status === 'Pending' && (
                                                 <Button onClick={() => updateStatus(req._id, 'Sent to Supplier')} variant="primary" className="flex-grow-1 py-2 rounded-3 fw-bold shadow-sm">
-                                                    Initialize Dispatch
+                                                    Send to Supplier
                                                 </Button>
                                             )}
                                             {req.status === 'Sent to Supplier' && (
                                                 <Button onClick={() => updateStatus(req._id, 'Received')} variant="success" className="flex-grow-1 py-2 rounded-3 fw-bold shadow-sm">
-                                                    Confirm Intake
+                                                    Confirm Receipt
                                                 </Button>
                                             )}
                                             {(req.status === 'Pending' || req.status === 'Sent to Supplier') && (
@@ -182,7 +182,7 @@ const SupplyChain = () => {
                                             {req.status === 'Received' && (
                                                 <div className="w-100 text-center bg-success bg-opacity-10 py-2 rounded-3 border border-success border-opacity-25">
                                                     <div className="text-success fw-bold small">
-                                                        <i className="bi bi-shield-check me-2"></i> INVENTORY RECONCILED
+                                                        <i className="bi bi-shield-check me-2"></i> Inventory Updated
                                                     </div>
                                                 </div>
                                             )}

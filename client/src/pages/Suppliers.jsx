@@ -48,7 +48,7 @@ const Suppliers = () => {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 className="fw-bold text-dark m-0">Suppliers</h2>
-                    <p className="text-muted small m-0">Manage your medicine supply partners</p>
+                    <p className="text-muted small m-0">Manage your medicine suppliers</p>
                 </div>
                 <Button
                     variant="primary"
@@ -74,9 +74,9 @@ const Suppliers = () => {
                     <Table hover responsive className="mb-0">
                         <thead className="bg-light">
                             <tr>
-                                <th className="ps-4 py-3 text-muted small fw-bold text-uppercase">Supplier Name</th>
-                                <th className="py-3 text-muted small fw-bold text-uppercase">Contact Number</th>
-                                <th className="py-3 text-muted small fw-bold text-uppercase">Email Address</th>
+                                <th className="ps-4 py-3 text-muted small fw-bold text-uppercase">Name</th>
+                                <th className="py-3 text-muted small fw-bold text-uppercase">Phone</th>
+                                <th className="py-3 text-muted small fw-bold text-uppercase">Email</th>
                                 <th className="py-3 text-muted small fw-bold text-uppercase">Address</th>
                                 <th className="pe-4 py-3 text-end text-muted small fw-bold text-uppercase">Actions</th>
                             </tr>

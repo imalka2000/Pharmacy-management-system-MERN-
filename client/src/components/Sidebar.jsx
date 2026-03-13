@@ -6,19 +6,19 @@ const Sidebar = () => {
     const { logout, user } = useAuth();
 
     const links = [
-        { title: 'Command Center', path: '/', icon: 'bi-grid-1x2-fill' },
-        { title: 'Inventory Bank', path: '/medicines', icon: 'bi-capsule' },
-        { title: 'Sales Terminal', path: '/sales', icon: 'bi-receipt-cutoff' },
+        { title: 'Dashboard', path: '/', icon: 'bi-grid-1x2-fill' },
+        { title: 'Medicine Inventory', path: '/medicines', icon: 'bi-capsule' },
+        { title: 'Sales', path: '/sales', icon: 'bi-receipt-cutoff' },
         { title: 'Prescriptions', path: '/prescriptions', icon: 'bi-file-earmark-medical' },
-        { title: 'Supply Pipeline', path: '/supply-chain', icon: 'bi-diagram-3-fill' },
-        { title: 'Logistics Control', path: '/deliveries', icon: 'bi-truck', role: 'admin' },
-        { title: 'Mission Portal', path: '/driver-portal', icon: 'bi-scooter', role: 'driver' },
-        { title: 'Supplier Network', path: '/suppliers', icon: 'bi-building-up', role: 'admin' },
-        { title: 'Human Resources', path: '/employees', icon: 'bi-people-fill', role: 'admin' },
-        { title: 'Resident Registry', path: '/users', icon: 'bi-person-badge', role: 'admin' },
+        { title: 'Supply Chain', path: '/supply-chain', icon: 'bi-diagram-3-fill' },
+        { title: 'Deliveries', path: '/deliveries', icon: 'bi-truck', role: 'admin' },
+        { title: 'Driver Portal', path: '/driver-portal', icon: 'bi-scooter', role: 'driver' },
+        { title: 'Suppliers', path: '/suppliers', icon: 'bi-building-up', role: 'admin' },
+        { title: 'Employees', path: '/employees', icon: 'bi-people-fill', role: 'admin' },
+        { title: 'Patients', path: '/users', icon: 'bi-person-badge', role: 'admin' },
         { title: 'Promotions', path: '/promotions', icon: 'bi-megaphone-fill' },
-        { title: 'Feedback Bank', path: '/feedback', icon: 'bi-chat-dots-fill' },
-        { title: 'Analytics', path: '/reports', icon: 'bi-bar-chart-line-fill', role: 'admin' },
+        { title: 'Feedback', path: '/feedback', icon: 'bi-chat-dots-fill' },
+        { title: 'Reports', path: '/reports', icon: 'bi-bar-chart-line-fill', role: 'admin' },
     ];
 
     return (
@@ -74,7 +74,7 @@ const Sidebar = () => {
                     className="btn btn-outline-danger w-100 py-3 rounded-4 fw-black text-uppercase letter-spacing-2 small d-flex align-items-center justify-content-center transition border-0 hover-lift"
                     style={{ background: 'rgba(220, 53, 69, 0.05)' }}
                 >
-                    <i className="bi bi-power me-2 fs-5"></i> Terminate Session
+                    <i className="bi bi-power me-2 fs-5"></i> Logout
                 </button>
             </div>
         </aside>

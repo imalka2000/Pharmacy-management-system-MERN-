@@ -34,7 +34,7 @@ const Employees = () => {
             setEmployees(data.filter(u => u.role !== 'user')); // Filter staff only
         } catch (error) {
             console.error('Directory sync error:', error);
-            toast.error('Personnel database connection interrupt');
+            toast.error('Failed to connect to employee database');
         } finally {
             setLoading(false);
         }
@@ -51,7 +51,7 @@ const Employees = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setFormData({ ...formData, profileImage: data });
-            toast.success('System identifier image uploaded');
+            toast.success('Profile image uploaded');
         } catch (error) {
             console.error(error);
             toast.error('Image transmission failed');
@@ -65,12 +65,12 @@ const Employees = () => {
         setSubmitting(true);
         try {
             await apiClient.post('/auth/register', formData);
-            toast.success('Personnel record established');
+            toast.success('Employee added successfully');
             setShowModal(false);
             fetchEmployees();
             setFormData({ username: '', password: '', role: 'pharmacist', fullName: '', email: '', phone: '', salary: '', profileImage: '' });
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Protocol failure during registration');
+            toast.error(error.response?.data?.message || 'Failed to register employee');
         } finally {
             setSubmitting(false);
         }
@@ -83,9 +83,9 @@ const Employees = () => {
 
     const getRoleConfig = (role) => {
         switch (role) {
-            case 'admin': return { bg: 'danger', icon: 'bi-shield-lock-fill', label: 'Systems Overseer' };
-            case 'driver': return { bg: 'warning', icon: 'bi-truck', label: 'Logistics Operative' };
-            default: return { bg: 'success', icon: 'bi-capsule', label: 'Medical Officer' };
+            case 'admin': return { bg: 'danger', icon: 'bi-shield-lock-fill', label: 'Admin' };
+            case 'driver': return { bg: 'warning', icon: 'bi-truck', label: 'Driver / Delivery' };
+            default: return { bg: 'success', icon: 'bi-capsule', label: 'Pharmacist' };
         }
     };
 
@@ -93,8 +93,8 @@ const Employees = () => {
         <div className="container-fluid px-0">
             <div className="d-flex flex-wrap justify-content-between align-items-end mb-5 gap-3">
                 <div>
-                    <h1 className="fw-black text-dark m-0 letter-spacing-n1">Staff Directory</h1>
-                    <p className="text-muted fw-bold small m-0 uppercase opacity-75">Human Capital & Access Control Management</p>
+                    <h1 className="fw-black text-dark m-0 letter-spacing-n1">Employees</h1>
+                    <p className="text-muted fw-bold small m-0 uppercase opacity-75">Manage staff accounts and access</p>
                 </div>
                 <Button
                     variant="dark"
@@ -102,7 +102,7 @@ const Employees = () => {
                     onClick={() => setShowModal(true)}
                     style={{ background: 'linear-gradient(45deg, #212529, #343a40)' }}
                 >
-                    <i className="bi bi-person-plus-fill me-2 fs-5"></i> Onboard New Staff
+                    <i className="bi bi-person-plus-fill me-2 fs-5"></i> Add New Employee
                 </Button>
             </div>
 
@@ -113,7 +113,7 @@ const Employees = () => {
                             <i className="bi bi-search text-muted"></i>
                         </InputGroup.Text>
                         <Form.Control
-                            placeholder="Filter by name, ID or role..."
+                            placeholder="Search by name, ID or role..."
                             className="bg-transparent border-0 py-2 ms-0 shadow-none fw-bold small"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
@@ -125,13 +125,13 @@ const Employees = () => {
             {loading ? (
                 <div className="text-center py-5">
                     <Spinner animation="border" variant="primary" />
-                    <p className="mt-3 text-muted fw-bold small uppercase letter-spacing-2">Synchronizing Bio-Metric Data...</p>
+                    <p className="mt-3 text-muted fw-bold small uppercase letter-spacing-2">Loading Employee Data...</p>
                 </div>
             ) : filteredEmployees.length === 0 ? (
                 <Card className="border-0 shadow-sm rounded-5 py-5 text-center bg-white">
                     <i className="bi bi-people display-1 text-muted opacity-10 mb-3"></i>
-                    <h4 className="fw-black text-muted">No Personnel Matches</h4>
-                    <p className="text-muted small uppercase fw-bold letter-spacing-1">Try adjusting your filtration parameters</p>
+                    <h4 className="fw-black text-muted">No Employees Found</h4>
+                    <p className="text-muted small uppercase fw-bold letter-spacing-1">Try adjusting your search</p>
                 </Card>
             ) : (
                 <Row className="g-4">
@@ -173,17 +173,17 @@ const Employees = () => {
 
                                         <div className="bg-light rounded-4 p-3 mb-4 text-start border border-dashed">
                                             <div className="d-flex justify-content-between align-items-center mb-2">
-                                                <span className="xxs fw-bold text-muted uppercase letter-spacing-1">Compensation</span>
+                                                <span className="xxs fw-bold text-muted uppercase letter-spacing-1">Salary</span>
                                                 <span className="fw-black text-dark small">${emp.salary || '0'}.00</span>
                                             </div>
                                             <div className="d-flex justify-content-between align-items-center">
-                                                <span className="xxs fw-bold text-muted uppercase letter-spacing-1">Registration</span>
+                                                <span className="xxs fw-bold text-muted uppercase letter-spacing-1">Joined Date</span>
                                                 <span className="fw-bold text-muted small">{new Date(emp.createdAt).toLocaleDateString()}</span>
                                             </div>
                                         </div>
 
                                         <Button variant="outline-dark" size="sm" className="w-100 rounded-4 fw-black text-uppercase letter-spacing-1 py-2 border-2 small">
-                                            Modify Protocol
+                                            Edit Details
                                         </Button>
                                     </Card.Body>
                                 </Card>
@@ -195,10 +195,10 @@ const Employees = () => {
 
             <Modal show={showModal} onHide={() => { setShowModal(false); setFormData({...formData, profileImage: ''}); }} centered size="lg" className="border-0">
                 <Modal.Header closeButton className="border-0 pb-0 px-4 pt-4">
-                    <Modal.Title className="fw-black display-6 text-dark letter-spacing-n1">Onboard Staff</Modal.Title>
+                    <Modal.Title className="fw-black display-6 text-dark letter-spacing-n1">Add Employee</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="p-4 pt-2">
-                    <p className="text-muted fw-bold small text-uppercase mb-4 letter-spacing-1">Establish new system operator profile</p>
+                    <p className="text-muted fw-bold small text-uppercase mb-4 letter-spacing-1">Add a new employee to the system</p>
                     <Form onSubmit={handleSubmit}>
                         <div className="text-center mb-4">
                             <div className="position-relative d-inline-block">
@@ -220,55 +220,55 @@ const Employees = () => {
                         <Row className="g-4 mb-4">
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">System Identity (Username)</Form.Label>
+                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Username</Form.Label>
                                     <Form.Control className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" required value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} />
                                 </Form.Group>
                             </Col>
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Access Credential (Password)</Form.Label>
+                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Password</Form.Label>
                                     <Form.Control className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" type="password" required value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
                                 </Form.Group>
                             </Col>
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Assigned Designation</Form.Label>
+                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Employee Role</Form.Label>
                                     <Form.Select className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
-                                        <option value="pharmacist">Medical Officer / Pharmacist</option>
-                                        <option value="driver">Logistics Agent / Driver</option>
-                                        <option value="admin">Systems Administrator</option>
+                                        <option value="pharmacist">Pharmacist</option>
+                                        <option value="driver">Driver / Delivery</option>
+                                        <option value="admin">Administrator</option>
                                     </Form.Select>
                                 </Form.Group>
                             </Col>
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Base Component Salary ($)</Form.Label>
+                                    <Form.Label className="xxs fw-bold text-muted uppercase letter-spacing-1">Base Salary ($)</Form.Label>
                                     <Form.Control className="bg-light border-0 py-3 rounded-4 shadow-none fw-black" type="number" value={formData.salary} onChange={e => setFormData({ ...formData, salary: e.target.value })} />
                                 </Form.Group>
                             </Col>
                         </Row>
 
                         <Card className="bg-primary bg-opacity-10 border-0 p-4 rounded-5 mb-4 border border-primary border-opacity-10">
-                            <h6 className="xxs fw-black text-primary uppercase letter-spacing-2 mb-4">Bio-Metric & Communication Attributes</h6>
+                            <h6 className="xxs fw-black text-primary uppercase letter-spacing-2 mb-4">Personal & Contact Information</h6>
                             <Row className="g-3">
                                 <Col md={12}>
-                                    <Form.Control className="bg-white border-0 py-3 rounded-4 shadow-sm fw-bold" placeholder="Full Legal Appellation" value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} />
+                                    <Form.Control className="bg-white border-0 py-3 rounded-4 shadow-sm fw-bold" placeholder="Full Name" value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} />
                                 </Col>
                                 <Col md={6}>
-                                    <Form.Control className="bg-white border-0 py-3 rounded-4 shadow-sm fw-bold" placeholder="Electronic Mail Address" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                                    <Form.Control className="bg-white border-0 py-3 rounded-4 shadow-sm fw-bold" placeholder="Email Address" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                                 </Col>
                                 <Col md={6}>
-                                    <Form.Control className="bg-white border-0 py-3 rounded-4 shadow-sm fw-bold" placeholder="Direct Communication Node" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                                    <Form.Control className="bg-white border-0 py-3 rounded-4 shadow-sm fw-bold" placeholder="Phone Number" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                                 </Col>
                             </Row>
                         </Card>
 
                         <div className="d-flex gap-3">
                             <Button variant="light" className="w-100 py-3 rounded-4 fw-black text-muted uppercase letter-spacing-1 border" onClick={() => setShowModal(false)} disabled={submitting}>
-                                Abandon
+                                Cancel
                             </Button>
                             <Button variant="primary" type="submit" className="w-100 py-3 rounded-4 fw-black uppercase letter-spacing-1 shadow-primary border-0" disabled={submitting || uploading}>
-                                {submitting ? 'Processing...' : 'Deploy Profile'}
+                                {submitting ? 'Adding...' : 'Save Employee'}
                             </Button>
                         </div>
                     </Form>

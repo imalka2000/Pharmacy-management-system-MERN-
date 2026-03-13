@@ -32,8 +32,8 @@ const Reports = () => {
         <div className="container-fluid">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2 className="fw-bold text-dark m-0">Financial Analytics</h2>
-                    <p className="text-muted small m-0">Review sales performance and transaction history</p>
+                    <h2 className="fw-bold text-dark m-0">Sales Reports</h2>
+                    <p className="text-muted small m-0">View sales history and financial summary</p>
                 </div>
                 <Button variant="outline-primary" className="rounded-3 shadow-sm" onClick={fetchSales}>
                     <i className="bi bi-arrow-clockwise me-2"></i> Refresh Data
@@ -104,7 +104,7 @@ const Reports = () => {
                             <tr>
                                 <td colSpan="5" className="text-center py-5">
                                     <Spinner animation="border" variant="primary" size="sm" />
-                                    <span className="ms-3 text-muted">Generating report...</span>
+                                    <span className="ms-3 text-muted">Loading report...</span>
                                 </td>
                             </tr>
                         ) : sales.length === 0 ? (

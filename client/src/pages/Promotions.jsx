@@ -53,13 +53,13 @@ const Promotions = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Terminate this promotion campaign?')) {
+        if (window.confirm('End this promotion campaign?')) {
             try {
                 await apiClient.delete(`/promotions/${id}`);
-                toast.success('Campaign terminated');
+                toast.success('Campaign ended');
                 fetchPromotions();
             } catch (error) {
-                toast.error('Failed to terminate campaign');
+                toast.error('Failed to end campaign');
             }
         }
     };
@@ -153,7 +153,7 @@ const Promotions = () => {
 
             <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg">
                 <Modal.Header closeButton className="border-0 pb-0">
-                    <Modal.Title className="fw-bold">Campaign Architect</Modal.Title>
+                    <Modal.Title className="fw-bold">Create Promotion</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="p-4">
                     <Form onSubmit={handleCreate}>
@@ -225,10 +225,10 @@ const Promotions = () => {
 
                         <div className="d-grid gap-2">
                             <Button variant="primary" type="submit" size="lg" className="py-3 rounded-4 fw-bold shadow-lg" disabled={submitting}>
-                                {submitting ? 'Calibrating Campaign...' : 'Finalize and Launch'}
+                                {submitting ? 'Creating Promotion...' : 'Launch Promotion'}
                             </Button>
                             <Button variant="link" className="text-muted text-decoration-none fw-bold small" onClick={() => setShowModal(false)}>
-                                Abandon Setup
+                                Cancel
                             </Button>
                         </div>
                     </Form>

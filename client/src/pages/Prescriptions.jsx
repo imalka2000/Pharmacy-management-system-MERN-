@@ -62,7 +62,7 @@ const Prescriptions = () => {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 className="fw-bold text-dark m-0">Prescriptions</h2>
-                    <p className="text-muted small m-0">Track and fulfill medical orders</p>
+                    <p className="text-muted small m-0">Manage and fulfill prescriptions</p>
                 </div>
                 <Button
                     variant="primary"
@@ -105,7 +105,7 @@ const Prescriptions = () => {
             {loading ? (
                 <div className="text-center py-5">
                     <Spinner animation="border" variant="primary" />
-                    <p className="mt-2 text-muted">Retrieving medical records...</p>
+                    <p className="mt-2 text-muted">Loading prescriptions...</p>
                 </div>
             ) : filteredPrescriptions.length === 0 ? (
                 <div className="text-center py-5 bg-white rounded-4 shadow-sm border">
@@ -124,7 +124,7 @@ const Prescriptions = () => {
                                                 <i className="bi bi-person-fill-check fs-4"></i>
                                             </div>
                                             <div>
-                                                <h5 className="fw-bold mb-0 text-dark">{p.customer?.fullName || 'Guest Patient'}</h5>
+                                                <h5 className="fw-bold mb-0 text-dark">{p.customer?.fullName || 'Patient'}</h5>
                                                 <small className="text-muted"><i className="bi bi-hospital me-1"></i> Dr. {p.doctorName || 'N/A'}</small>
                                             </div>
                                         </div>
@@ -160,17 +160,17 @@ const Prescriptions = () => {
                                         <div className="d-flex gap-2">
                                             {p.status === 'Pending' && (
                                                 <Button variant="primary" size="sm" className="rounded-pill px-3 fw-bold" onClick={() => updateStatus(p._id, 'Processing')}>
-                                                    Start Work
+                                                    Start Processing
                                                 </Button>
                                             )}
                                             {p.status === 'Processing' && (
                                                 <Button variant="success" size="sm" className="rounded-pill px-3 fw-bold" onClick={() => updateStatus(p._id, 'Completed')}>
-                                                    Mark Done
+                                                    Complete
                                                 </Button>
                                             )}
                                             {p.status === 'Completed' && (
                                                 <Button variant="outline-secondary" size="sm" className="rounded-pill px-3 fw-bold" onClick={() => updateStatus(p._id, 'Picked Up')}>
-                                                    Hand Over
+                                                    Mark Picked Up
                                                 </Button>
                                             )}
                                         </div>
