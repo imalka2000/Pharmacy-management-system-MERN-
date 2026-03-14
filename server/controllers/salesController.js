@@ -56,8 +56,10 @@ const createSale = async (req, res) => {
             totalAmount,
             tax: tax || 0,
             discount: discount || 0,
-            grandTotal,
+            grandTotal: req.body.grandTotal || grandTotal,
+            receivedAmount: req.body.receivedAmount || 0,
             subject: req.body.subject,
+            documentDate: req.body.documentDate,
             dueDate: req.body.dueDate,
             notes: req.body.notes,
             status: req.body.status || 'Pending'

@@ -8,6 +8,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import toast from 'react-hot-toast';
 import ViewSaleModal from '../components/ViewSaleModal';
+import CreateInvoiceModal from '../components/CreateInvoiceModal';
 import useAuth from '../hooks/useAuth';
 
 const Bills = () => {
@@ -27,6 +28,7 @@ const Bills = () => {
 
     const [transactions, setTransactions] = useState({});
     const [selectedInvoice, setSelectedInvoice] = useState(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     const exportOptions = [10, 25, 50, 100];
 
@@ -117,8 +119,16 @@ const Bills = () => {
                     <h3 className="fw-bold m-0">Invoices & Bills</h3>
                     <p className="text-muted small m-0">View finalized billing records and transaction history</p>
                 </div>
-                <div className="col-md-4 text-end">
+                <div className="col-md-6 text-end">
                     <div className="d-flex align-items-center justify-content-end action-bar">
+                        <Button 
+                            variant="primary" 
+                            className="rounded-pill py-2 px-4 shadow-sm fw-bold border-0 d-flex align-items-center me-3"
+                            style={{ backgroundColor: 'var(--theme-color)' }}
+                            onClick={() => setShowCreateModal(true)}
+                        >
+                            <i className="bi bi-plus-circle-fill me-2"></i> Direct Invoice
+                        </Button>
                         <Button variant="link" onClick={() => fetchInvoices(page)} className="text-dark p-0 me-3 shadow-none border-0">
                             <i className="bi bi-arrow-clockwise fs-5"></i>
                         </Button>
@@ -258,6 +268,13 @@ const Bills = () => {
                 <ViewSaleModal
                     sale={selectedInvoice}
                     onClose={() => setSelectedInvoice(null)}
+                />
+            )}
+
+            {showCreateModal && (
+                <CreateInvoiceModal
+                    onClose={() => setShowCreateModal(false)}
+                    onSuccess={() => fetchInvoices(0)}
                 />
             )}
 

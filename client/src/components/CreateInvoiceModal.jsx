@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, Button, Form, Row, Col, Table, InputGroup, Card, Badge, Dropdown } from 'react-bootstrap';
-import CreatableSelect from 'react-select/creatable';
+import { Modal, Button, Form, Row, Col, Table, Card, Spinner } from 'react-bootstrap';
 import Select from 'react-select';
 import toast from 'react-hot-toast';
 import apiClient from '../api-request/config';
 
-const CreateSaleModal = ({ onClose, onSuccess }) => {
+const CreateInvoiceModal = ({ onClose, onSuccess }) => {
     const [medicines, setMedicines] = useState([]);
     const [loading, setLoading] = useState(false);
     
-    // Core Reference Logic Structures
     const emptyCustomerDetails = {
         displayName: "",
         email: "",
@@ -36,6 +34,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
         customerId: "guest",
         customerName: "Guest Customer",
         customerDetails: { ...emptyCustomerDetails },
+        documentDate: new Date().toISOString().split('T')[0],
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         subject: "",
         notes: "",
@@ -56,7 +55,6 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
     const fetchMedicines = async () => {
         try {
             const { data } = await apiClient.get('/medicines');
-            // Format for react-select integration
             const formatted = data.map(m => ({
                 ...m,
                 value: m._id,
@@ -70,7 +68,6 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
         }
     };
 
-    // Item Calculations mirroring reference logic
     const calculateItemTotals = (item, taxType) => {
         const unitPrice = Number(item.unitPrice) || 0;
         const quantity = Number(item.quantity) || 1;
@@ -82,7 +79,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
             base = unitPrice * quantity;
             taxAmount = base * (rate / 100);
             amount = base + taxAmount;
-        } else { // Inclusive
+        } else {
             const netAmount = unitPrice * quantity;
             amount = netAmount;
             if (rate > 0) {
@@ -101,7 +98,6 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
         };
     };
 
-    // Overall Calculations
     const calculateSubtotal = () => formData.items.reduce((acc, it) => acc + (Number(it.base) || 0), 0);
     const calculateTaxTotal = () => formData.items.reduce((acc, it) => acc + (Number(it.taxAmount) || 0), 0);
     const calculateDiscount = () => {
@@ -111,7 +107,6 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
     };
     const calculateTotal = () => calculateSubtotal() - calculateDiscount() + calculateTaxTotal();
 
-    // Handlers
     const handleChange = (e) => {
         const { name, value } = e.target;
         
@@ -143,7 +138,6 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
         }));
     };
 
-    // Item Table Handlers
     const handleMedSelect = (selectedOption, index) => {
         if (!selectedOption) return;
         
@@ -159,7 +153,6 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                 batchNumber: med.batchNumber,
                 expiryDate: med.expiryDate,
                 unitPrice: med.price,
-                // Apply defaults and recalculate
                 ...calculateItemTotals({ ...newItems[index], unitPrice: med.price }, prev.taxType)
             };
             return { ...prev, items: newItems };
@@ -169,16 +162,13 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
     const handleItemParamChange = (index, field, value) => {
         setFormData(prev => {
             const newItems = [...prev.items];
-            const numValue = field === 'quantity' || field === 'unitPrice' || field === 'taxRate' 
-                ? (Number(value) || 0) 
-                : value;
+            const numValue = ['quantity', 'unitPrice', 'taxRate'].includes(field) ? (Number(value) || 0) : value;
                 
             newItems[index] = {
                 ...newItems[index],
                 [field]: numValue
             };
             
-            // Recalculate
             newItems[index] = {
                 ...newItems[index],
                 ...calculateItemTotals(newItems[index], prev.taxType)
@@ -220,7 +210,6 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
 
         setLoading(true);
         try {
-            // Map to backend schema
             const payloadItems = validItems.map(item => ({
                 medicine: item.medicineId,
                 name: item.name,
@@ -228,8 +217,10 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                 expiryDate: item.expiryDate,
                 price: item.unitPrice,
                 quantity: item.quantity,
-                subtotal: item.amount // Backend expects amount here currently
+                subtotal: item.amount
             }));
+
+            const finalTotal = calculateTotal();
 
             const payload = {
                 items: payloadItems,
@@ -240,26 +231,39 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                 },
                 subject: formData.subject,
                 dueDate: formData.dueDate,
+                documentDate: formData.documentDate,
                 notes: formData.notes,
                 tax: calculateTaxTotal(),
                 discount: calculateDiscount(),
-                status: 'Pending' // Sales Order default
+                grandTotal: finalTotal,
+                receivedAmount: finalTotal, // Direct invoice is fully paid
+                status: 'Completed' // Invoice default
             };
 
-            await apiClient.post('/sales', payload);
-            toast.success('Sales Order Created Successfully');
+            const { data } = await apiClient.post('/sales', payload);
+            
+            // Log direct payment transaction
+            await apiClient.post('/transactions', {
+                type: 'Income',
+                category: 'Sale',
+                amount: finalTotal,
+                referenceId: data._id,
+                onModel: 'Sale',
+                description: `Payment received for Direct Invoice #${data.invoiceNumber || data._id}`
+            });
+
+            toast.success('Direct Invoice Created & Paid');
             if(onSuccess) onSuccess();
             onClose();
             
         } catch (error) {
             console.error(error);
-            toast.error(error.response?.data?.message || 'Failed to create Sales Order');
+            toast.error(error.response?.data?.message || 'Failed to create Invoice');
         } finally {
             setLoading(false);
         }
     };
 
-    // Render Helpers
     const formatOptionLabel = ({ label, batchNumber, quantity, price }) => (
         <div className="d-flex justify-content-between align-items-center">
             <div>
@@ -278,19 +282,18 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
     return (
         <Modal show={true} onHide={onClose} size="xl" backdrop="static" centered className="erp-modal">
             <Form noValidate validated={validated} ref={formRef} onSubmit={handleSubmit}>
-                <Modal.Header closeButton className="bg-light border-bottom border-2">
-                    <Modal.Title className="fw-bold d-flex align-items-center">
-                        <i className="bi bi-file-earmark-plus-fill text-primary me-3 fs-3"></i>
-                        New Sales Order
+                <Modal.Header closeButton className="bg-primary text-white border-bottom border-2">
+                    <Modal.Title className="fw-bold d-flex align-items-center text-white">
+                        <i className="bi bi-receipt-cutoff me-3 fs-3"></i>
+                        New Direct Invoice
                     </Modal.Title>
                 </Modal.Header>
 
                 <Modal.Body className="p-4 bg-light bg-opacity-50" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
-                    {/* Header Setup */}
-                    <Card className="border-0 shadow-sm rounded-4 mb-4">
+                    <Card className="border-0 shadow-sm rounded-4 mb-4 border border-primary border-opacity-25">
                         <Card.Body className="p-4">
                             <h6 className="fw-black text-uppercase text-primary small mb-4">
-                                <i className="bi bi-info-circle-fill me-2"></i>Order Context
+                                <i className="bi bi-person-lines-fill me-2"></i>Billing & Customer Details
                             </h6>
                             <Row className="g-4">
                                 <Col md={4}>
@@ -301,26 +304,39 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                                             name="displayName"
                                             value={formData.customerDetails.displayName}
                                             onChange={handleCustomerChange}
-                                            placeholder="Enter customer name..."
-                                            className="bg-light shadow-none"
+                                            placeholder="Guest or Specific Name..."
+                                            className="bg-white shadow-none"
                                         />
                                     </Form.Group>
                                 </Col>
                                 <Col md={4}>
                                     <Form.Group>
-                                        <Form.Label className="small fw-bold">Customer Phone</Form.Label>
+                                        <Form.Label className="small fw-bold">Contact Number</Form.Label>
                                         <Form.Control 
                                             name="mobileNo"
                                             value={formData.customerDetails.mobileNo}
                                             onChange={handleCustomerChange}
-                                            placeholder="Contact number"
+                                            placeholder="Phone for receipt"
+                                            className="bg-white shadow-none"
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={2}>
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold">Invoice Date <span className="text-danger">*</span></Form.Label>
+                                        <Form.Control 
+                                            required
+                                            type="date"
+                                            name="documentDate"
+                                            value={formData.documentDate}
+                                            onChange={handleChange}
                                             className="bg-light shadow-none"
                                         />
                                     </Form.Group>
                                 </Col>
-                                <Col md={4}>
+                                <Col md={2}>
                                     <Form.Group>
-                                        <Form.Label className="small fw-bold">Expected Due Date <span className="text-danger">*</span></Form.Label>
+                                        <Form.Label className="small fw-bold">Due Date <span className="text-danger">*</span></Form.Label>
                                         <Form.Control 
                                             required
                                             type="date"
@@ -331,38 +347,13 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                                         />
                                     </Form.Group>
                                 </Col>
-                                <Col md={4}>
-                                    <Form.Group>
-                                        <Form.Label className="small fw-bold">Subject / Reference</Form.Label>
-                                        <Form.Control 
-                                            name="subject"
-                                            value={formData.subject}
-                                            onChange={handleChange}
-                                            placeholder="e.g. Monthly Supply"
-                                            className="bg-light shadow-none"
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col md={8}>
-                                    <Form.Group>
-                                        <Form.Label className="small fw-bold">Address / Line 1</Form.Label>
-                                        <Form.Control 
-                                            name="lane1"
-                                            value={formData.customerDetails.lane1}
-                                            onChange={handleCustomerChange}
-                                            placeholder="Billing address..."
-                                            className="bg-light shadow-none"
-                                        />
-                                    </Form.Group>
-                                </Col>
                             </Row>
                         </Card.Body>
                     </Card>
 
-                    {/* Item Table (Reference Matching) */}
                     <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-visible">
                         <Card.Header className="bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
-                            <h6 className="fw-black text-uppercase text-dark small m-0">Item Details</h6>
+                            <h6 className="fw-black text-uppercase text-dark small m-0">Line Items</h6>
                             <div className="d-flex align-items-center">
                                 <Form.Label className="small fw-bold m-0 me-3">Amounts are</Form.Label>
                                 <Form.Select 
@@ -434,7 +425,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                                                     className="text-end shadow-none"
                                                 />
                                             </td>
-                                            <td className="text-end pe-4 fw-bold">
+                                            <td className="text-end pe-4 fw-bold text-dark">
                                                 ${item.amount.toFixed(2)}
                                             </td>
                                             <td className="text-center">
@@ -449,8 +440,6 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                                             </td>
                                         </tr>
                                     ))}
-                                    
-                                    {/* Action row */}
                                     <tr>
                                         <td colSpan="6" className="ps-4 py-3 border-0 bg-light">
                                             <Button 
@@ -467,19 +456,25 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                         </Card.Body>
                     </Card>
 
-                    {/* Footer Summary Container */}
                     <Row className="g-4">
                         <Col lg={7}>
                             <Card className="border-0 shadow-sm rounded-4 h-100">
                                 <Card.Body className="p-4">
-                                    <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Internal Notes</Form.Label>
+                                    <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Invoice References & Notes</Form.Label>
+                                    <Form.Control 
+                                        name="subject"
+                                        value={formData.subject}
+                                        onChange={handleChange}
+                                        placeholder="Reference or Subject (e.g. PO#12345)"
+                                        className="bg-light shadow-none mb-3"
+                                    />
                                     <Form.Control
                                         as="textarea"
-                                        rows={4}
+                                        rows={3}
                                         name="notes"
                                         value={formData.notes}
                                         onChange={handleChange}
-                                        placeholder="Any special instructions or observations..."
+                                        placeholder="Any special terms or notes to display..."
                                         className="bg-light shadow-none border-0 rounded-3"
                                     />
                                 </Card.Body>
@@ -487,7 +482,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                         </Col>
                         
                         <Col lg={5}>
-                            <Card className="border-0 shadow-sm rounded-4 h-100 bg-white border border-primary border-opacity-10">
+                            <Card className="border-0 shadow-sm rounded-4 h-100 bg-white border border-secondary border-opacity-10">
                                 <Card.Body className="p-4">
                                     <div className="d-flex justify-content-between align-items-center mb-3">
                                         <span className="text-muted fw-bold">Subtotal</span>
@@ -530,9 +525,9 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
 
                                     <hr className="my-4 border-2 opacity-10" />
 
-                                    <div className="d-flex justify-content-between align-items-center p-3 bg-primary bg-opacity-10 rounded-3">
-                                        <span className="fw-black text-uppercase text-primary letter-spacing-1">Grand Total</span>
-                                        <span className="h3 fw-black text-primary m-0">${calculateTotal().toFixed(2)}</span>
+                                    <div className="d-flex justify-content-between align-items-center p-3 bg-success bg-gradient text-white rounded-3 shadow-sm">
+                                        <span className="fw-black text-uppercase letter-spacing-1">Amount Due</span>
+                                        <span className="h3 fw-black m-0">${calculateTotal().toFixed(2)}</span>
                                     </div>
                                 </Card.Body>
                             </Card>
@@ -541,13 +536,13 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
 
                 </Modal.Body>
 
-                <Modal.Footer className="bg-white border-top border-2 p-3">
+                <Modal.Footer className="bg-light border-top border-2 p-3">
                     <Button variant="outline-secondary" className="fw-bold px-4 py-2" onClick={onClose} disabled={loading}>
                         Cancel
                     </Button>
-                    <Button variant="primary" type="submit" className="fw-black px-4 py-2 shadow-lg d-flex align-items-center" disabled={loading}>
-                        {loading ? <Spinner size="sm" className="me-2" /> : <i className="bi bi-save-fill me-2"></i>}
-                        Save Sales Order
+                    <Button variant="success" type="submit" className="fw-black px-4 py-2 shadow-sm d-flex align-items-center text-white" disabled={loading}>
+                        {loading ? <Spinner size="sm" className="me-2" /> : <i className="bi bi-cash-coin me-2"></i>}
+                        Generate Direct Invoice & Mark Paid
                     </Button>
                 </Modal.Footer>
             </Form>
@@ -555,4 +550,4 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
     );
 };
 
-export default CreateSaleModal;
+export default CreateInvoiceModal;

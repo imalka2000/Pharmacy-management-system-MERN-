@@ -25,6 +25,7 @@ const saleSchema = new mongoose.Schema({
     grandTotal: { type: Number, required: true },
     receivedAmount: { type: Number, default: 0 },
     subject: { type: String },
+    documentDate: { type: Date },
     dueDate: { type: Date },
     notes: { type: String }
 }, { timestamps: true });
