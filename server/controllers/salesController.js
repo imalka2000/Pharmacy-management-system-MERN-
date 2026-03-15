@@ -1,5 +1,6 @@
 const Medicine = require('../models/Medicine');
 const Transaction = require('../models/Transaction');
+const Sale = require('../models/Sale');
 
 // @desc    Create a new sale
 // @route   POST /api/sales
@@ -86,7 +87,8 @@ const getSales = async (req, res) => {
         const sales = await Sale.find(query).populate('pharmacist', 'username').populate('items.medicine', 'name');
         res.json(sales);
     } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+        console.error('getSales Error:', error);
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 

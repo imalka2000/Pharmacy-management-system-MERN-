@@ -76,8 +76,8 @@ const Deliveries = () => {
     };
 
     const filteredDeliveries = deliveries.filter(d => {
-        const matchSearch = d.customer?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            d.driver?.fullName?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchSearch = (d.customer?.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (d.driver?.fullName || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchStatus = filterStatus === 'All' || d.status === filterStatus;
         return matchSearch && matchStatus;
     });

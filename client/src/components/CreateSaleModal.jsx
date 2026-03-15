@@ -1,558 +1,903 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Modal, Button, Form, Row, Col, Table, InputGroup, Card, Badge, Dropdown } from 'react-bootstrap';
-import CreatableSelect from 'react-select/creatable';
-import Select from 'react-select';
-import toast from 'react-hot-toast';
-import apiClient from '../api-request/config';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Modal,
+  Button,
+  Form,
+  Row,
+  Col,
+  Table,
+  InputGroup,
+  Dropdown
+} from "react-bootstrap";
+import Select from "react-select";
+import CreatableSelect from "react-select/creatable";
+import * as XLSX from "xlsx";
+import toast from "react-hot-toast";
+import apiClient from "../api-request/config";
+
+const selectStyles = {
+  menuList: (provided) => ({
+    ...provided,
+    maxHeight: 200,
+    overflowY: "auto",
+    padding: 0
+  }),
+  menuPortal: (provided) => ({
+    ...provided,
+    zIndex: 9999
+  }),
+  control: (base) => ({ ...base, minHeight: "34px" })
+};
 
 const CreateSaleModal = ({ onClose, onSuccess }) => {
-    const [medicines, setMedicines] = useState([]);
-    const [loading, setLoading] = useState(false);
-    
-    // Core Reference Logic Structures
-    const emptyCustomerDetails = {
-        displayName: "",
-        email: "",
-        mobileNo: "",
-        lane1: "",
-        lane2: "",
-        city: ""
-    };
+  const [medicines, setMedicines] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const formRef = useRef(null);
 
-    const initialItemState = {
-        medicineId: null,
-        name: "",
-        batchNumber: "",
-        expiryDate: "",
-        quantity: 1,
+  const initialFormState = {
+    code: "",
+    manualCode: false,
+    customerId: "guest",
+    customerName: "Guest Customer",
+    customerDetails: {
+      displayName: "",
+      email: "",
+      mobileNo: "",
+      lane1: "",
+      lane2: "",
+      city: ""
+    },
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
+    subject: "",
+    note: "",
+    taxType: "Exclusive",
+    items: [
+      {
+        itemId: null,
+        itemName: "",
         unitPrice: 0,
+        quantity: 1,
         taxRate: 0,
         amount: 0,
         base: 0,
         taxAmount: 0
+      }
+    ],
+    discountType: "Percentage",
+    discount: 0
+  };
+
+  const [formData, setFormData] = useState({ ...initialFormState });
+  const [validated, setValidated] = useState(false);
+  const [isEditable, setIsEditable] = useState(true);
+
+  // Load items
+  useEffect(() => {
+    fetchMedicines();
+  }, []);
+
+  const fetchMedicines = async () => {
+    try {
+      const { data } = await apiClient.get("/medicines");
+      setMedicines(
+        data.map((m) => ({
+          ...m,
+          value: m._id,
+          label: m.name,
+          isDisabled: m.quantity <= 0
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load inventory items");
+    }
+  };
+
+  const calculateItemTotals = (item, taxType) => {
+    const unitPrice = Number(item.unitPrice) || 0;
+    const quantity = Number(item.quantity) || 1;
+    const rate = Number(item.taxRate) || 0;
+
+    let base = 0,
+      taxAmount = 0,
+      amount = 0;
+
+    if (taxType === "Exclusive" || taxType === "Tax Exclusive") {
+      base = unitPrice * quantity;
+      taxAmount = base * (rate / 100);
+      amount = base + taxAmount;
+    } else {
+      const netAmount = unitPrice * quantity;
+      amount = netAmount;
+      if (rate > 0) {
+        base = netAmount / (1 + rate / 100);
+        taxAmount = netAmount - base;
+      } else {
+        base = netAmount;
+        taxAmount = 0;
+      }
+    }
+
+    return {
+      amount: Number.isFinite(amount) ? Number(amount.toFixed(2)) : 0,
+      base: Number.isFinite(base) ? Number(base.toFixed(2)) : 0,
+      taxAmount: Number.isFinite(taxAmount) ? Number(taxAmount.toFixed(2)) : 0
+    };
+  };
+
+  const handleChange = (e) => {
+    if (!isEditable || loading) return;
+    const { name, value, type, checked } = e.target;
+
+    if (name === "taxType") {
+      setFormData((prev) => ({
+        ...prev,
+        taxType: value,
+        items: prev.items.map((item) => ({
+          ...item,
+          ...calculateItemTotals(item, value)
+        }))
+      }));
+    } else if (name === "manualCode") {
+      setFormData((prev) => ({
+        ...prev,
+        manualCode: checked,
+        code: checked ? prev.code : ""
+      }));
+      if (!checked) setValidated(false);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: ["discount"].includes(name) ? Number(value) || 0 : value
+      }));
+    }
+  };
+
+  const handleCustomerChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      customerDetails: {
+        ...prev.customerDetails,
+        [name]: value
+      }
+    }));
+  };
+
+  const handleItemChange = (index, field, value) => {
+    if (!isEditable || loading) return;
+    const updated = [...formData.items];
+
+    const numValue =
+      field === "quantity" || field === "unitPrice" || field === "taxRate"
+        ? Number(value) || 0
+        : value;
+
+    updated[index] = {
+      ...updated[index],
+      [field]: numValue
     };
 
-    const initialFormData = {
-        customerId: "guest",
-        customerName: "Guest Customer",
-        customerDetails: { ...emptyCustomerDetails },
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        subject: "",
-        notes: "",
-        taxType: "Exclusive",
-        discountType: "Percentage",
-        discount: 0,
-        items: [{ ...initialItemState }]
+    updated[index] = {
+      ...updated[index],
+      ...calculateItemTotals(updated[index], formData.taxType)
     };
 
-    const [formData, setFormData] = useState({ ...initialFormData });
-    const [validated, setValidated] = useState(false);
-    const formRef = useRef(null);
+    setFormData((prev) => ({ ...prev, items: updated }));
+  };
 
-    useEffect(() => {
-        fetchMedicines();
-    }, []);
+  const removeItem = (index) => {
+    if (!isEditable || loading) return;
+    setFormData((prev) => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
 
-    const fetchMedicines = async () => {
-        try {
-            const { data } = await apiClient.get('/medicines');
-            // Format for react-select integration
-            const formatted = data.map(m => ({
-                ...m,
-                value: m._id,
-                label: m.name,
-                isDisabled: m.quantity <= 0
-            }));
-            setMedicines(formatted);
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to load inventory items');
-        }
-    };
+  const handleRefresh = () => {
+    setFormData({ ...initialFormState });
+    setValidated(false);
+    toast.success("Form reset to default.");
+  };
 
-    // Item Calculations mirroring reference logic
-    const calculateItemTotals = (item, taxType) => {
-        const unitPrice = Number(item.unitPrice) || 0;
-        const quantity = Number(item.quantity) || 1;
-        const rate = Number(item.taxRate) || 0;
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.json_to_sheet([
+      {
+        "Item Name": "",
+        "Unit Price": "",
+        "Quantity": "",
+        "Tax Rate": ""
+      }
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, "Sales_Order_Template.xlsx");
+  };
+
+  const handleExcelUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = new Uint8Array(ev.target.result);
+        const wb = XLSX.read(data, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(ws, { defval: "" });
         
-        let base = 0, taxAmount = 0, amount = 0;
+        const parsed = json
+          .map((row) => {
+            const name = (row["Item Name"] ?? "").toString().trim();
+            const unitPrice = Number(row["Unit Price"]) || 0;
+            const quantity = Number(row["Quantity"]) || 1;
+            const taxRate = Number(row["Tax Rate"]) || 0;
 
-        if (taxType === "Exclusive") {
-            base = unitPrice * quantity;
-            taxAmount = base * (rate / 100);
-            amount = base + taxAmount;
-        } else { // Inclusive
-            const netAmount = unitPrice * quantity;
-            amount = netAmount;
-            if (rate > 0) {
-                base = netAmount / (1 + rate / 100);
-                taxAmount = netAmount - base;
-            } else {
-                base = netAmount;
-                taxAmount = 0;
-            }
-        }
+            if (!name) return null;
 
-        return {
-            amount: Number(amount.toFixed(2)),
-            base: Number(base.toFixed(2)),
-            taxAmount: Number(taxAmount.toFixed(2))
-        };
-    };
+            const match = medicines.find(
+              (i) => i.name?.toLowerCase() === name.toLowerCase()
+            );
 
-    // Overall Calculations
-    const calculateSubtotal = () => formData.items.reduce((acc, it) => acc + (Number(it.base) || 0), 0);
-    const calculateTaxTotal = () => formData.items.reduce((acc, it) => acc + (Number(it.taxAmount) || 0), 0);
-    const calculateDiscount = () => {
-        const sub = calculateSubtotal();
-        const disc = Number(formData.discount) || 0;
-        return formData.discountType === "Percentage" ? (sub * disc) / 100 : disc;
-    };
-    const calculateTotal = () => calculateSubtotal() - calculateDiscount() + calculateTaxTotal();
+            const it = {
+              itemId: match?._id || null,
+              itemName: match?.name || name,
+              unitPrice: unitPrice || match?.price || 0,
+              quantity,
+              taxRate
+            };
+            return { ...it, ...calculateItemTotals(it, formData.taxType) };
+          })
+          .filter(Boolean);
 
-    // Handlers
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        
-        if (name === "taxType") {
-            setFormData(prev => ({
-                ...prev,
-                taxType: value,
-                items: prev.items.map(item => ({
-                    ...item,
-                    ...calculateItemTotals(item, value)
-                }))
-            }));
-        } else {
-            setFormData(prev => ({
-                ...prev,
-                [name]: ['discount'].includes(name) ? (Number(value) || 0) : value
-            }));
-        }
-    };
-
-    const handleCustomerChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            customerDetails: {
-                ...prev.customerDetails,
-                [name]: value
-            }
+        setFormData((prev) => ({
+          ...prev,
+          items:
+            parsed.length > 0
+              ? parsed
+              : [
+                  ...initialFormState.items
+                ]
         }));
+        toast.success(`Uploaded ${parsed.length} item(s) successfully!`);
+      } catch (err) {
+        console.error("Excel read error:", err);
+        toast.error("Could not read the Excel file.");
+      } finally {
+        e.target.value = "";
+      }
     };
+    reader.onerror = () => toast.error("Failed to read file.");
+    reader.readAsArrayBuffer(file);
+  };
 
-    // Item Table Handlers
-    const handleMedSelect = (selectedOption, index) => {
-        if (!selectedOption) return;
-        
-        const med = medicines.find(m => m._id === selectedOption.value);
-        if (!med) return;
+  const calculateSubtotal = () =>
+    formData.items.reduce((acc, it) => acc + (Number(it.base) || 0), 0);
+  const calculateTaxTotal = () =>
+    formData.items.reduce((acc, it) => acc + (Number(it.taxAmount) || 0), 0);
+  const calculateDiscount = () => {
+    const sub = calculateSubtotal();
+    const disc = Number(formData.discount) || 0;
+    return formData.discountType === "Percentage"
+      ? (sub * disc) / 100
+      : disc;
+  };
+  const calculateTotal = () =>
+    calculateSubtotal() - calculateDiscount() + calculateTaxTotal();
 
-        setFormData(prev => {
-            const newItems = [...prev.items];
-            newItems[index] = {
-                ...newItems[index],
-                medicineId: med._id,
-                name: med.name,
-                batchNumber: med.batchNumber,
-                expiryDate: med.expiryDate,
-                unitPrice: med.price,
-                // Apply defaults and recalculate
-                ...calculateItemTotals({ ...newItems[index], unitPrice: med.price }, prev.taxType)
-            };
-            return { ...prev, items: newItems };
-        });
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const form = formRef.current;
+    if (!form.checkValidity()) {
+      e.stopPropagation();
+      setValidated(true);
+      return;
+    }
 
-    const handleItemParamChange = (index, field, value) => {
-        setFormData(prev => {
-            const newItems = [...prev.items];
-            const numValue = field === 'quantity' || field === 'unitPrice' || field === 'taxRate' 
-                ? (Number(value) || 0) 
-                : value;
-                
-            newItems[index] = {
-                ...newItems[index],
-                [field]: numValue
-            };
-            
-            // Recalculate
-            newItems[index] = {
-                ...newItems[index],
-                ...calculateItemTotals(newItems[index], prev.taxType)
-            };
-            
-            return { ...prev, items: newItems };
-        });
-    };
+    if (formData.manualCode && !formData.code?.trim()) {
+      toast.error("Please enter a Sales Order Code.");
+      setValidated(true);
+      return;
+    }
 
-    const addItem = () => {
-        setFormData(prev => ({
-            ...prev,
-            items: [...prev.items, { ...initialItemState }]
-        }));
-    };
+    setValidated(true);
 
-    const removeItem = (index) => {
-        if (formData.items.length <= 1) return;
-        setFormData(prev => ({
-            ...prev,
-            items: prev.items.filter((_, i) => i !== index)
-        }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        const form = formRef.current;
-        if (!form.checkValidity()) {
-            e.stopPropagation();
-            setValidated(true);
-            return toast.error("Please fill in required fields correctly.");
-        }
-
-        const validItems = formData.items.filter(item => item.medicineId && item.quantity > 0);
-        if (validItems.length === 0) {
-            return toast.error("Please add at least one valid item.");
-        }
-
-        setLoading(true);
-        try {
-            // Map to backend schema
-            const payloadItems = validItems.map(item => ({
-                medicine: item.medicineId,
-                name: item.name,
-                batchNumber: item.batchNumber,
-                expiryDate: item.expiryDate,
-                price: item.unitPrice,
-                quantity: item.quantity,
-                subtotal: item.amount // Backend expects amount here currently
-            }));
-
-            const payload = {
-                items: payloadItems,
-                customerInfo: {
-                    name: formData.customerDetails.displayName || formData.customerName,
-                    phone: formData.customerDetails.mobileNo,
-                    address: `${formData.customerDetails.lane1} ${formData.customerDetails.lane2} ${formData.customerDetails.city}`.trim()
-                },
-                subject: formData.subject,
-                dueDate: formData.dueDate,
-                notes: formData.notes,
-                tax: calculateTaxTotal(),
-                discount: calculateDiscount(),
-                status: 'Pending' // Sales Order default
-            };
-
-            await apiClient.post('/sales', payload);
-            toast.success('Sales Order Created Successfully');
-            if(onSuccess) onSuccess();
-            onClose();
-            
-        } catch (error) {
-            console.error(error);
-            toast.error(error.response?.data?.message || 'Failed to create Sales Order');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Render Helpers
-    const formatOptionLabel = ({ label, batchNumber, quantity, price }) => (
-        <div className="d-flex justify-content-between align-items-center">
-            <div>
-                <strong className="text-dark">{label}</strong>
-                {batchNumber && <span className="text-muted ms-2 small">[{batchNumber}]</span>}
-            </div>
-            <div className="text-end">
-                <span className={`badge ${quantity > 10 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} me-2`}>
-                    Stock: {quantity}
-                </span>
-                <strong className="text-primary">${price?.toFixed(2)}</strong>
-            </div>
-        </div>
+    const validItems = formData.items.filter(
+      (item) => item.itemName && item.quantity > 0
     );
+    if (validItems.length === 0) {
+      return toast.error("Please add at least one valid item.");
+    }
 
-    return (
-        <Modal show={true} onHide={onClose} size="xl" backdrop="static" centered className="erp-modal">
-            <Form noValidate validated={validated} ref={formRef} onSubmit={handleSubmit}>
-                <Modal.Header closeButton className="bg-light border-bottom border-2">
-                    <Modal.Title className="fw-bold d-flex align-items-center">
-                        <i className="bi bi-file-earmark-plus-fill text-primary me-3 fs-3"></i>
-                        New Sales Order
-                    </Modal.Title>
-                </Modal.Header>
+    setLoading(true);
+    try {
+      const payloadItems = validItems.map((item) => ({
+        medicine: item.itemId, // The backend schema references Medicine model
+        name: item.itemName,
+        price: item.unitPrice,
+        quantity: item.quantity,
+        subtotal: item.amount 
+      }));
 
-                <Modal.Body className="p-4 bg-light bg-opacity-50" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
-                    {/* Header Setup */}
-                    <Card className="border-0 shadow-sm rounded-4 mb-4">
-                        <Card.Body className="p-4">
-                            <h6 className="fw-black text-uppercase text-primary small mb-4">
-                                <i className="bi bi-info-circle-fill me-2"></i>Order Context
-                            </h6>
-                            <Row className="g-4">
-                                <Col md={4}>
-                                    <Form.Group>
-                                        <Form.Label className="small fw-bold">Customer Name <span className="text-danger">*</span></Form.Label>
-                                        <Form.Control 
-                                            required
-                                            name="displayName"
-                                            value={formData.customerDetails.displayName}
-                                            onChange={handleCustomerChange}
-                                            placeholder="Enter customer name..."
-                                            className="bg-light shadow-none"
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col md={4}>
-                                    <Form.Group>
-                                        <Form.Label className="small fw-bold">Customer Phone</Form.Label>
-                                        <Form.Control 
-                                            name="mobileNo"
-                                            value={formData.customerDetails.mobileNo}
-                                            onChange={handleCustomerChange}
-                                            placeholder="Contact number"
-                                            className="bg-light shadow-none"
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col md={4}>
-                                    <Form.Group>
-                                        <Form.Label className="small fw-bold">Expected Due Date <span className="text-danger">*</span></Form.Label>
-                                        <Form.Control 
-                                            required
-                                            type="date"
-                                            name="dueDate"
-                                            value={formData.dueDate}
-                                            onChange={handleChange}
-                                            className="bg-light shadow-none"
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col md={4}>
-                                    <Form.Group>
-                                        <Form.Label className="small fw-bold">Subject / Reference</Form.Label>
-                                        <Form.Control 
-                                            name="subject"
-                                            value={formData.subject}
-                                            onChange={handleChange}
-                                            placeholder="e.g. Monthly Supply"
-                                            className="bg-light shadow-none"
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col md={8}>
-                                    <Form.Group>
-                                        <Form.Label className="small fw-bold">Address / Line 1</Form.Label>
-                                        <Form.Control 
-                                            name="lane1"
-                                            value={formData.customerDetails.lane1}
-                                            onChange={handleCustomerChange}
-                                            placeholder="Billing address..."
-                                            className="bg-light shadow-none"
-                                        />
-                                    </Form.Group>
-                                </Col>
-                            </Row>
-                        </Card.Body>
-                    </Card>
+      const payload = {
+        items: payloadItems,
+        customerInfo: {
+          name: formData.customerDetails.displayName || formData.customerName,
+          phone: formData.customerDetails.mobileNo,
+          address: `${formData.customerDetails.lane1} ${formData.customerDetails.lane2} ${formData.customerDetails.city}`.trim()
+        },
+        subject: formData.subject,
+        dueDate: formData.dueDate,
+        notes: formData.note,
+        tax: calculateTaxTotal(),
+        discount: calculateDiscount(),
+        status: "Pending", // Direct Sales Orders start as pending
+        ...(formData.manualCode && formData.code?.trim() && { code: formData.code.trim() })
+      };
 
-                    {/* Item Table (Reference Matching) */}
-                    <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-visible">
-                        <Card.Header className="bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
-                            <h6 className="fw-black text-uppercase text-dark small m-0">Item Details</h6>
-                            <div className="d-flex align-items-center">
-                                <Form.Label className="small fw-bold m-0 me-3">Amounts are</Form.Label>
-                                <Form.Select 
-                                    size="sm" 
-                                    name="taxType" 
-                                    value={formData.taxType} 
-                                    onChange={handleChange}
-                                    style={{ width: '150px' }}
-                                    className="fw-bold text-primary shadow-none cursor-pointer"
-                                >
-                                    <option value="Exclusive">Tax Exclusive</option>
-                                    <option value="Inclusive">Tax Inclusive</option>
-                                </Form.Select>
+      await apiClient.post("/sales", payload);
+      toast.success("Sales Order Created Successfully");
+      if (onSuccess) onSuccess();
+      onClose();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to create Sales Order");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal
+      show={true}
+      onHide={onClose}
+      size="xl"
+      backdrop="static"
+      centered
+    >
+      <Modal.Header closeButton>
+        <Modal.Title>New Sales Order</Modal.Title>
+      </Modal.Header>
+
+      <Modal.Body className="p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+        <style>
+          {`
+            .was-validated .form-control:valid,
+            .form-control.is-valid,
+            .was-validated .form-select:valid,
+            .form-select.is-valid {
+              background-image: none !important;
+              border-color: var(--bs-border-color) !important;
+            }
+          `}
+        </style>
+        <div className="container">
+          <Form
+            ref={formRef}
+            noValidate
+            validated={validated}
+            onSubmit={(e) => e.preventDefault()}
+          >
+            {/* ---------- MANUAL CODE ---------- */}
+            <Row className="mb-3 align-items-center">
+              <Col md={3}>
+                <Form.Label className="mb-0">Sales Order Code</Form.Label>
+              </Col>
+              <Col md={6}>
+                <InputGroup>
+                  <Form.Check
+                    type="switch"
+                    id="manualCodeSwitch"
+                    label="Manual"
+                    name="manualCode"
+                    checked={formData.manualCode}
+                    onChange={handleChange}
+                    disabled={!isEditable || loading}
+                  />
+                  {formData.manualCode && (
+                    <Form.Control
+                      type="text"
+                      placeholder="e.g. SO-01"
+                      name="code"
+                      value={formData.code}
+                      onChange={handleChange}
+                      disabled={!isEditable || loading}
+                      style={{ marginLeft: "10px" }}
+                      required={formData.manualCode}
+                      isInvalid={
+                        validated &&
+                        formData.manualCode &&
+                        !formData.code?.trim()
+                      }
+                    />
+                  )}
+                  {validated &&
+                    formData.manualCode &&
+                    !formData.code?.trim() && (
+                      <Form.Control.Feedback
+                        type="invalid"
+                        style={{ display: "block" }}
+                      >
+                        Code is required.
+                      </Form.Control.Feedback>
+                    )}
+                </InputGroup>
+              </Col>
+            </Row>
+
+            {/* ---------- Customer Details ---------- */}
+            <Row className="mb-3 align-items-center">
+              <Col md={3}>
+                <Form.Label className="mb-0">Customer Name *</Form.Label>
+              </Col>
+              <Col md={6}>
+                <Form.Control
+                  type="text"
+                  name="displayName"
+                  value={formData.customerDetails.displayName}
+                  onChange={handleCustomerChange}
+                  disabled={!isEditable || loading}
+                  required
+                />
+              </Col>
+            </Row>
+
+            <Row className="mb-3 align-items-center">
+              <Col md={3}>
+                <Form.Label className="mb-0">Customer Phone</Form.Label>
+              </Col>
+              <Col md={6}>
+                <Form.Control
+                  type="text"
+                  name="mobileNo"
+                  value={formData.customerDetails.mobileNo}
+                  onChange={handleCustomerChange}
+                  disabled={!isEditable || loading}
+                />
+              </Col>
+            </Row>
+
+            <Row className="mb-3 align-items-center">
+              <Col md={3}>
+                <Form.Label className="mb-0">Expected Due Date *</Form.Label>
+              </Col>
+              <Col md={6}>
+                <Form.Control
+                  type="date"
+                  name="dueDate"
+                  value={formData.dueDate}
+                  onChange={handleChange}
+                  disabled={!isEditable || loading}
+                  required
+                />
+              </Col>
+            </Row>
+
+            <Row className="mb-3 align-items-center">
+              <Col md={3}>
+                <Form.Label className="mb-0">Subject / Reference</Form.Label>
+              </Col>
+              <Col md={6}>
+                <Form.Control
+                  type="text"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  disabled={!isEditable || loading}
+                />
+              </Col>
+            </Row>
+
+            <Row className="mb-3 align-items-center">
+              <Col md={3}>
+                <Form.Label className="mb-0">Note / Address</Form.Label>
+              </Col>
+              <Col md={6}>
+                <Form.Control
+                  as="textarea"
+                  rows={2}
+                  name="note"
+                  value={formData.note}
+                  onChange={handleChange}
+                  disabled={!isEditable || loading}
+                />
+              </Col>
+            </Row>
+
+            {/* ---------- Excel Upload ---------- */}
+            <Row className="mb-4 align-items-center">
+              <Col md={3}>
+                <Form.Label className="mb-0">Upload Items</Form.Label>
+              </Col>
+              <Col md={6}>
+                <div className="d-flex align-items-center gap-2 flex-nowrap">
+                  <Form.Control
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleExcelUpload}
+                    disabled={!isEditable || loading}
+                    className="flex-grow-1"
+                  />
+                  <Button
+                    variant="outline-success"
+                    size="sm"
+                    onClick={downloadTemplate}
+                    disabled={!isEditable || loading}
+                    className="d-flex align-items-center flex-shrink-0"
+                  >
+                    <i className="bi bi-download me-1"></i> Template
+                  </Button>
+                </div>
+              </Col>
+            </Row>
+
+            {/* ---------- Tax Type ---------- */}
+            <Form.Group className="mb-3">
+              <Form.Label>Tax Type</Form.Label>
+              <Form.Select
+                name="taxType"
+                value={formData.taxType}
+                onChange={handleChange}
+                style={{ width: "200px" }}
+                disabled={!isEditable || loading}
+              >
+                <option value="Exclusive">Tax Exclusive</option>
+                <option value="Inclusive">Tax Inclusive</option>
+              </Form.Select>
+              <Form.Text className="text-muted">
+                {formData.taxType === "Inclusive"
+                  ? "Unit prices include tax"
+                  : "Tax will be added to unit prices"}
+              </Form.Text>
+            </Form.Group>
+
+            {/* ---------- Items Table ---------- */}
+            <Form.Group className="mb-4">
+              <Form.Label>Order Items</Form.Label>
+              <div
+                className="border rounded"
+                style={{ backgroundColor: "#f8f9fa", overflowX: 'auto' }}
+              >
+                <Table bordered className="mb-0" style={{ tableLayout: "fixed", minWidth: '900px' }}>
+                  <thead>
+                    <tr className="text-muted small">
+                      <th style={{ width: "30%" }}>Item Name</th>
+                      <th style={{ width: "13%" }} className="text-center">
+                        Unit Price
+                      </th>
+                      <th style={{ width: "14%" }} className="text-center">
+                        Quantity
+                      </th>
+                      <th style={{ width: "18%" }} className="text-center">
+                        Tax (%)
+                      </th>
+                      <th style={{ width: "15%" }} className="text-end">
+                        Amount
+                      </th>
+                      <th style={{ width: "10%" }} className="text-center">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.items.map((item, index) => {
+                      const isEmptyRow =
+                        !item.itemName && index === formData.items.length - 1;
+                      const isFilledRow = !!item.itemName;
+
+                      return (
+                        <tr
+                          key={index}
+                          className={isEmptyRow ? "text-muted" : ""}
+                        >
+                          {/* Item Name */}
+                          <td className="align-top">
+                            <CreatableSelect
+                              className="react-select-container"
+                              classNamePrefix="react-select"
+                              value={
+                                item.itemId
+                                  ? {
+                                      value: item.itemId,
+                                      label: item.itemName
+                                    }
+                                  : item.itemName
+                                  ? {
+                                      value: item.itemName,
+                                      label: item.itemName
+                                    }
+                                  : null
+                              }
+                              onChange={(selected, actionMeta) => {
+                                const updated = [...formData.items];
+                                if (actionMeta.action === "create-option") {
+                                  updated[index] = {
+                                    ...updated[index],
+                                    itemId: null,
+                                    itemName: selected.label,
+                                  };
+                                } else if (selected) {
+                                  const sel = medicines.find(
+                                    (i) => i._id === selected.value
+                                  );
+                                  updated[index] = {
+                                    ...updated[index],
+                                    itemId: sel?._id || null,
+                                    itemName: sel?.name || "",
+                                    unitPrice: sel?.price ?? 0,
+                                  };
+                                } else {
+                                  updated[index] = {
+                                    itemId: null,
+                                    itemName: "",
+                                    unitPrice: 0,
+                                    quantity: 1,
+                                    taxRate: 0,
+                                    amount: 0,
+                                    base: 0,
+                                    taxAmount: 0
+                                  };
+                                }
+
+                                updated[index] = {
+                                  ...updated[index],
+                                  ...calculateItemTotals(
+                                    updated[index],
+                                    formData.taxType
+                                  )
+                                };
+
+                                if (
+                                  selected &&
+                                  index === formData.items.length - 1
+                                ) {
+                                  updated.push({
+                                    itemId: null,
+                                    itemName: "",
+                                    unitPrice: 0,
+                                    quantity: 1,
+                                    taxRate: 0,
+                                    amount: 0,
+                                    base: 0,
+                                    taxAmount: 0
+                                  });
+                                }
+
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  items: updated
+                                }));
+                              }}
+                              options={medicines.map((i) => ({
+                                value: i._id,
+                                label: i.name
+                              }))}
+                              isDisabled={!isEditable || loading}
+                              placeholder={
+                                isEmptyRow ? "Select or enter an item" : ""
+                              }
+                              isSearchable
+                              isClearable={isFilledRow}
+                              createOptionPosition="first"
+                              styles={{
+                                ...selectStyles,
+                                control: (base) => ({
+                                  ...base,
+                                  minHeight: "34px",
+                                  fontSize: "0.875rem",
+                                  backgroundColor: isEmptyRow
+                                    ? "#f1f3f5"
+                                    : "#fff",
+                                  borderColor: "#ced4da"
+                                })
+                              }}
+                              menuPortalTarget={document.body}
+                            />
+                          </td>
+
+                          {/* Unit Price */}
+                          <td className="align-top" style={{ padding: "0.35rem 0.5rem" }}>
+                            <Form.Control
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={item.unitPrice ?? ""}
+                              onChange={(e) =>
+                                handleItemChange(
+                                  index,
+                                  "unitPrice",
+                                  e.target.value
+                                )
+                              }
+                              disabled={!isEditable || loading || !item.itemName}
+                              placeholder="0"
+                              className="text-end"
+                              style={{ height: "34px", fontSize: "0.875rem" }}
+                            />
+                            {formData.taxType === "Inclusive" && item.taxRate > 0 && (
+                              <div className="text-muted small">
+                                Base: {item.base?.toFixed(2) || "0.00"}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Quantity */}
+                          <td className="align-top" style={{ padding: "0.35rem 0.5rem" }}>
+                            <div className="d-flex align-items-center justify-content-center">
+                              <Button
+                                variant="light"
+                                size="sm"
+                                disabled={!isEditable || loading || !item.itemName}
+                                onClick={() =>
+                                  handleItemChange(
+                                    index,
+                                    "quantity",
+                                    Math.max(1, (item.quantity || 1) - 1)
+                                  )
+                                }
+                                style={{ width: "28px", height: "34px", padding: 0 }}
+                              >
+                                −
+                              </Button>
+
+                              <Form.Control
+                                type="number"
+                                min="1"
+                                value={item.quantity}
+                                onChange={(e) =>
+                                  handleItemChange(
+                                    index,
+                                    "quantity",
+                                    Number(e.target.value)
+                                  )
+                                }
+                                disabled={!isEditable || loading || !item.itemName}
+                                style={{ width: "80px", height: "34px", textAlign: "center" }}
+                              />
+
+                              <Button
+                                variant="light"
+                                size="sm"
+                                disabled={!isEditable || loading || !item.itemName}
+                                onClick={() =>
+                                  handleItemChange(
+                                    index,
+                                    "quantity",
+                                    (item.quantity || 1) + 1
+                                  )
+                                }
+                                style={{ width: "28px", height: "34px", padding: 0 }}
+                              >
+                                +
+                              </Button>
                             </div>
-                        </Card.Header>
-                        <Card.Body className="p-0">
-                            <Table responsive hover className="align-middle m-0" style={{ minWidth: '900px' }}>
-                                <thead className="bg-light">
-                                    <tr>
-                                        <th style={{ width: '35%' }} className="ps-4">Item Details</th>
-                                        <th style={{ width: '15%' }} className="text-end">Quantity</th>
-                                        <th style={{ width: '15%' }} className="text-end">Unit Price</th>
-                                        <th style={{ width: '15%' }} className="text-end">Tax (%)</th>
-                                        <th style={{ width: '15%' }} className="text-end pe-4">Amount</th>
-                                        <th style={{ width: '5%' }}></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {formData.items.map((item, index) => (
-                                        <tr key={index}>
-                                            <td className="ps-4 py-3">
-                                                <Select
-                                                    options={medicines}
-                                                    formatOptionLabel={formatOptionLabel}
-                                                    onChange={(selected) => handleMedSelect(selected, index)}
-                                                    placeholder="Select or scan item..."
-                                                    className="shadow-sm"
-                                                    value={item.medicineId ? { value: item.medicineId, label: item.name } : null}
-                                                    menuPortalTarget={document.body}
-                                                    styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control 
-                                                    type="number" 
-                                                    min="1"
-                                                    value={item.quantity}
-                                                    onChange={(e) => handleItemParamChange(index, 'quantity', e.target.value)}
-                                                    className="text-end shadow-none"
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    min="0"
-                                                    value={item.unitPrice}
-                                                    onChange={(e) => handleItemParamChange(index, 'unitPrice', e.target.value)}
-                                                    className="text-end shadow-none"
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control 
-                                                    type="number" 
-                                                    step="0.1" 
-                                                    min="0"
-                                                    value={item.taxRate}
-                                                    onChange={(e) => handleItemParamChange(index, 'taxRate', e.target.value)}
-                                                    className="text-end shadow-none"
-                                                />
-                                            </td>
-                                            <td className="text-end pe-4 fw-bold">
-                                                ${item.amount.toFixed(2)}
-                                            </td>
-                                            <td className="text-center">
-                                                <Button 
-                                                    variant="link" 
-                                                    className="text-danger p-0 shadow-none border-0"
-                                                    disabled={formData.items.length <= 1}
-                                                    onClick={() => removeItem(index)}
-                                                >
-                                                    <i className="bi bi-x-circle-fill fs-5"></i>
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    
-                                    {/* Action row */}
-                                    <tr>
-                                        <td colSpan="6" className="ps-4 py-3 border-0 bg-light">
-                                            <Button 
-                                                variant="outline-primary" 
-                                                className="fw-bold border-2 rounded-3 shadow-sm btn-sm"
-                                                onClick={addItem}
-                                            >
-                                                <i className="bi bi-plus-lg me-2"></i> Add Another Item
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </Table>
-                        </Card.Body>
-                    </Card>
+                          </td>
 
-                    {/* Footer Summary Container */}
-                    <Row className="g-4">
-                        <Col lg={7}>
-                            <Card className="border-0 shadow-sm rounded-4 h-100">
-                                <Card.Body className="p-4">
-                                    <Form.Label className="small fw-bold text-muted text-uppercase mb-2">Internal Notes</Form.Label>
-                                    <Form.Control
-                                        as="textarea"
-                                        rows={4}
-                                        name="notes"
-                                        value={formData.notes}
-                                        onChange={handleChange}
-                                        placeholder="Any special instructions or observations..."
-                                        className="bg-light shadow-none border-0 rounded-3"
-                                    />
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                        
-                        <Col lg={5}>
-                            <Card className="border-0 shadow-sm rounded-4 h-100 bg-white border border-primary border-opacity-10">
-                                <Card.Body className="p-4">
-                                    <div className="d-flex justify-content-between align-items-center mb-3">
-                                        <span className="text-muted fw-bold">Subtotal</span>
-                                        <span className="fw-black">${calculateSubtotal().toFixed(2)}</span>
-                                    </div>
-                                    
-                                    <div className="d-flex justify-content-between align-items-center mb-3">
-                                        <span className="text-muted fw-bold">Discount</span>
-                                        <div className="d-flex" style={{ width: '150px' }}>
-                                            <Form.Control 
-                                                type="number" 
-                                                min="0"
-                                                name="discount"
-                                                value={formData.discount}
-                                                onChange={handleChange}
-                                                className="text-end shadow-none px-2 py-1 rounded-end-0 border-end-0"
-                                            />
-                                            <Form.Select 
-                                                name="discountType"
-                                                value={formData.discountType}
-                                                onChange={handleChange}
-                                                className="shadow-none px-2 py-1 bg-light border-start-0 rounded-start-0 w-auto"
-                                            >
-                                                <option value="Percentage">%</option>
-                                                <option value="Fixed">$</option>
-                                            </Form.Select>
-                                        </div>
-                                    </div>
-                                    <div className="d-flex justify-content-between align-items-center mb-3 text-end">
-                                        <span></span>
-                                        <span className="text-danger small fw-bold">
-                                            - ${calculateDiscount().toFixed(2)}
-                                        </span>
-                                    </div>
+                          {/* Tax */}
+                          <td className="align-top" style={{ padding: "0.35rem 0.5rem" }}>
+                             <Form.Control
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              value={item.taxRate ?? ""}
+                              onChange={(e) =>
+                                handleItemChange(
+                                  index,
+                                  "taxRate",
+                                  e.target.value
+                                )
+                              }
+                              disabled={!isEditable || loading || !item.itemName}
+                              placeholder="0"
+                              className="text-end"
+                              style={{ height: "34px", fontSize: "0.875rem" }}
+                            />
+                          </td>
 
-                                    <div className="d-flex justify-content-between align-items-center mb-3">
-                                        <span className="text-muted fw-bold">Tax Amount</span>
-                                        <span className="fw-black text-secondary">${calculateTaxTotal().toFixed(2)}</span>
-                                    </div>
+                          {/* Amount */}
+                          <td className="text-end fw-bold align-top" style={{ padding: "0.35rem 0.5rem" }}>
+                            ${item.amount?.toFixed(2) ?? "0.00"}
+                            {item.taxAmount > 0 && (
+                              <div className="text-muted small">
+                                Tax: {item.taxAmount?.toFixed(2) || "0.00"}
+                              </div>
+                            )}
+                          </td>
 
-                                    <hr className="my-4 border-2 opacity-10" />
+                          {/* Actions */}
+                          <td className="text-center align-top" style={{ padding: "0.35rem 0.5rem" }}>
+                            {(isFilledRow || (!isFilledRow && index !== formData.items.length - 1)) && (
+                              <Button
+                                variant="link"
+                                className="text-danger p-0"
+                                onClick={() => removeItem(index)}
+                                disabled={loading}
+                              >
+                                <i className="bi bi-trash-fill fs-5"></i>
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+              </div>
+            </Form.Group>
 
-                                    <div className="d-flex justify-content-between align-items-center p-3 bg-primary bg-opacity-10 rounded-3">
-                                        <span className="fw-black text-uppercase text-primary letter-spacing-1">Grand Total</span>
-                                        <span className="h3 fw-black text-primary m-0">${calculateTotal().toFixed(2)}</span>
-                                    </div>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    </Row>
-
-                </Modal.Body>
-
-                <Modal.Footer className="bg-white border-top border-2 p-3">
-                    <Button variant="outline-secondary" className="fw-bold px-4 py-2" onClick={onClose} disabled={loading}>
-                        Cancel
-                    </Button>
-                    <Button variant="primary" type="submit" className="fw-black px-4 py-2 shadow-lg d-flex align-items-center" disabled={loading}>
-                        {loading ? <Spinner size="sm" className="me-2" /> : <i className="bi bi-save-fill me-2"></i>}
-                        Save Sales Order
-                    </Button>
-                </Modal.Footer>
-            </Form>
-        </Modal>
-    );
+            {/* ---------- Summary Table ---------- */}
+            <Table
+              bordered
+              style={{ width: "100%", maxWidth: "400px", marginLeft: "auto" }}
+            >
+              <tbody>
+                <tr>
+                  <td style={{ fontWeight: "bold" }}>Sub Total</td>
+                  <td style={{ textAlign: "right" }}>
+                    ${calculateSubtotal().toFixed(2)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: "bold" }}>
+                    Discount
+                    <div className="d-flex gap-2 mt-1">
+                      <Form.Control
+                        type="number"
+                        min="0"
+                        name="discount"
+                        value={formData.discount}
+                        onChange={handleChange}
+                        style={{ width: "80px" }}
+                        disabled={!isEditable || loading}
+                      />
+                      <Form.Select
+                        name="discountType"
+                        value={formData.discountType}
+                        onChange={handleChange}
+                        style={{ width: "90px" }}
+                        disabled={!isEditable || loading}
+                      >
+                        <option value="Percentage">%</option>
+                        <option value="Fixed">$</option>
+                      </Form.Select>
+                    </div>
+                  </td>
+                  <td style={{ textAlign: "right", color: '#dc3545' }}>
+                    -${calculateDiscount().toFixed(2)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: "bold" }}>Total Tax</td>
+                  <td style={{ textAlign: "right" }}>
+                    ${calculateTaxTotal().toFixed(2)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: "bold", backgroundColor: '#e9ecef' }}>Grand Total</td>
+                  <td style={{ textAlign: "right", fontWeight: 'bold', backgroundColor: '#e9ecef', fontSize: '1.2rem' }}>
+                    ${calculateTotal().toFixed(2)}
+                  </td>
+                </tr>
+              </tbody>
+            </Table>
+          </Form>
+        </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={onClose} disabled={loading}>
+          Cancel
+        </Button>
+        <Button variant="outline-secondary" onClick={handleRefresh} disabled={loading}>
+          Reset
+        </Button>
+        <Button variant="primary" onClick={handleSubmit} disabled={loading}>
+          Save
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
 };
 
 export default CreateSaleModal;
+

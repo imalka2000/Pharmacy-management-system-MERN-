@@ -54,7 +54,7 @@ const updatePurchaseOrder = async (req, res) => {
             for (const item of order.items) {
                 const medicine = await Medicine.findById(item.medicine);
                 if (medicine) {
-                    medicine.stock += item.quantity;
+                    medicine.quantity += item.quantity;
                     await medicine.save();
                 }
             }

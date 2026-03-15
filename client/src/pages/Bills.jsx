@@ -44,7 +44,7 @@ const Bills = () => {
             if (searchKeyword) {
                 const kw = searchKeyword.toLowerCase();
                 filtered = filtered.filter(o => 
-                    o.invoiceNumber.toLowerCase().includes(kw) ||
+                    (o.invoiceNumber || '').toLowerCase().includes(kw) ||
                     (o.customerInfo?.name || '').toLowerCase().includes(kw)
                 );
             }

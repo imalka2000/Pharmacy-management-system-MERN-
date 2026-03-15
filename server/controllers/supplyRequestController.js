@@ -28,7 +28,7 @@ const createSupplyRequest = async (req, res) => {
 const getSupplyRequests = async (req, res) => {
     try {
         const requests = await SupplyRequest.find({})
-            .populate('medicine', 'name stock')
+            .populate('medicine', 'name quantity')
             .populate('supplier', 'name email phone')
             .populate('requestedBy', 'fullName username')
             .sort({ createdAt: -1 });
@@ -54,7 +54,7 @@ const updateSupplyRequestStatus = async (req, res) => {
         if (status === 'Received' && supplyRequest.status !== 'Received') {
             const medicine = await Medicine.findById(supplyRequest.medicine);
             if (medicine) {
-                medicine.stock += supplyRequest.quantity;
+                medicine.quantity += supplyRequest.quantity;
                 await medicine.save();
             }
         }
