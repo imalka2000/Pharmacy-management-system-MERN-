@@ -1,5 +1,6 @@
 const PurchaseOrder = require('../models/PurchaseOrder');
 const Medicine = require('../models/Medicine');
+const Supplier = require('../models/Supplier');
 
 // @desc    Get all purchase orders
 // @route   GET /api/purchase-orders
@@ -7,7 +8,7 @@ const Medicine = require('../models/Medicine');
 const getPurchaseOrders = async (req, res) => {
     try {
         const orders = await PurchaseOrder.find()
-            .populate('supplier', 'name email phone')
+            .populate('supplier', 'name email contactNumber address')
             .populate('items.medicine', 'name')
             .sort({ createdAt: -1 });
         res.json(orders);

@@ -1,5 +1,6 @@
 const Package = require('../models/Package');
 const Sale = require('../models/Sale');
+const User = require('../models/User');
 
 // @desc    Create a new package
 // @route   POST /api/packages

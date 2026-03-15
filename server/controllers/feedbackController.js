@@ -1,4 +1,5 @@
 const Feedback = require('../models/Feedback');
+const User = require('../models/User');
 
 // @desc    Create new feedback
 // @route   POST /api/feedback

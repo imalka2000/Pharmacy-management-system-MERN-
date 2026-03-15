@@ -1,4 +1,5 @@
 const Prescription = require('../models/Prescription');
+const User = require('../models/User');
 
 // @desc    Create a new prescription
 // @route   POST /api/prescriptions

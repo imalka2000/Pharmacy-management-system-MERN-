@@ -1,5 +1,7 @@
 const SupplyRequest = require('../models/SupplyRequest');
 const Medicine = require('../models/Medicine');
+const Supplier = require('../models/Supplier');
+const User = require('../models/User');
 
 // @desc    Create a new supply request
 // @route   POST /api/supply-requests
@@ -29,7 +31,7 @@ const getSupplyRequests = async (req, res) => {
     try {
         const requests = await SupplyRequest.find({})
             .populate('medicine', 'name quantity')
-            .populate('supplier', 'name email phone')
+            .populate('supplier', 'name email contactNumber')
             .populate('requestedBy', 'fullName username')
             .sort({ createdAt: -1 });
         res.json(requests);
