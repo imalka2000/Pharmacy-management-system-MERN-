@@ -1,10 +1,16 @@
 const express = require('express');
-const { createSale, getSales } = require('../controllers/salesController');
+const { createSale, getSales, updateSale, convertToInvoice } = require('../controllers/salesController');
 const { protect, admin, pharmacist } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 router.route('/')
-    .post(protect, createSale) // Any logged in user can try to create a sale (store or pos)
-    .get(protect, getSales); // Controller should handle filtering for non-admin/pharmacist
+    .post(protect, createSale)
+    .get(protect, getSales);
+
+router.route('/convert-to-invoice')
+    .post(protect, convertToInvoice);
+
+router.route('/:id')
+    .put(protect, updateSale);
 
 module.exports = router;

@@ -10,7 +10,7 @@ const saleSchema = new mongoose.Schema({
         address: { type: String }
     },
     source: { type: String, enum: ['pos', 'store'], default: 'pos' },
-    status: { type: String, enum: ['Pending', 'Packaged', 'Completed'], default: 'Pending' },
+    status: { type: String, enum: ['Pending', 'Packaged', 'Completed', 'Invoiced', 'Closed'], default: 'Pending' },
     items: [
         {
             medicine: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicine', required: true },
@@ -23,6 +23,10 @@ const saleSchema = new mongoose.Schema({
     tax: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
     grandTotal: { type: Number, required: true },
+    receivedAmount: { type: Number, default: 0 },
+    subject: { type: String },
+    documentDate: { type: Date },
+    dueDate: { type: Date },
     notes: { type: String }
 }, { timestamps: true });
 

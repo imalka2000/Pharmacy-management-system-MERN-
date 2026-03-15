@@ -7,7 +7,8 @@ import {
   Col,
   Table,
   InputGroup,
-  Dropdown
+  Dropdown,
+  Spinner
 } from "react-bootstrap";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
@@ -29,7 +30,7 @@ const selectStyles = {
   control: (base) => ({ ...base, minHeight: "34px" })
 };
 
-const CreateSaleModal = ({ onClose, onSuccess }) => {
+const CreateInvoiceModal = ({ onClose, onSuccess }) => {
   const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(false);
   const formRef = useRef(null);
@@ -47,6 +48,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
       lane2: "",
       city: ""
     },
+    documentDate: new Date().toISOString().split("T")[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split("T")[0],
@@ -213,7 +215,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Template");
-    XLSX.writeFile(wb, "Sales_Order_Template.xlsx");
+    XLSX.writeFile(wb, "Invoice_Template.xlsx");
   };
 
   const handleExcelUpload = (e) => {
@@ -296,7 +298,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
     }
 
     if (formData.manualCode && !formData.code?.trim()) {
-      toast.error("Please enter a Sales Order Code.");
+      toast.error("Please enter an Invoice Code.");
       setValidated(true);
       return;
     }
@@ -320,6 +322,8 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
         subtotal: item.amount 
       }));
 
+      const finalTotal = calculateTotal();
+
       const payload = {
         items: payloadItems,
         customerInfo: {
@@ -328,21 +332,37 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
           address: `${formData.customerDetails.lane1} ${formData.customerDetails.lane2} ${formData.customerDetails.city}`.trim()
         },
         subject: formData.subject,
+        documentDate: formData.documentDate,
         dueDate: formData.dueDate,
         notes: formData.note,
         tax: calculateTaxTotal(),
         discount: calculateDiscount(),
-        status: "Pending", // Direct Sales Orders start as pending
+        grandTotal: finalTotal,
+        receivedAmount: finalTotal, // Direct invoice is fully paid
+        status: "Completed", // Direct Invoices are marked Completed/Paid
         ...(formData.manualCode && formData.code?.trim() && { code: formData.code.trim() })
       };
 
-      await apiClient.post("/sales", payload);
-      toast.success("Sales Order Created Successfully");
+      const { data } = await apiClient.post("/sales", payload);
+      
+      // Log direct payment transaction
+      if (data && data._id) {
+          await apiClient.post('/transactions', {
+              type: 'Income',
+              category: 'Sale',
+              amount: finalTotal,
+              referenceId: data._id,
+              onModel: 'Sale',
+              description: `Payment received for Direct Invoice #${data.invoiceNumber || data.code || data._id}`
+          }).catch(console.error);
+      }
+
+      toast.success("Direct Invoice Created Successfully");
       if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Failed to create Sales Order");
+      toast.error(error.response?.data?.message || "Failed to create Invoice");
     } finally {
       setLoading(false);
     }
@@ -357,7 +377,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
       centered
     >
       <Modal.Header closeButton>
-        <Modal.Title>New Sales Order</Modal.Title>
+        <Modal.Title>New Direct Invoice</Modal.Title>
       </Modal.Header>
 
       <Modal.Body className="p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
@@ -382,7 +402,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
             {/* ---------- MANUAL CODE ---------- */}
             <Row className="mb-3 align-items-center">
               <Col md={3}>
-                <Form.Label className="mb-0">Sales Order Code</Form.Label>
+                <Form.Label className="mb-0">Invoice Code</Form.Label>
               </Col>
               <Col md={6}>
                 <InputGroup>
@@ -398,7 +418,7 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
                   {formData.manualCode && (
                     <Form.Control
                       type="text"
-                      placeholder="e.g. SO-01"
+                      placeholder="e.g. INV-01"
                       name="code"
                       value={formData.code}
                       onChange={handleChange}
@@ -460,7 +480,23 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
 
             <Row className="mb-3 align-items-center">
               <Col md={3}>
-                <Form.Label className="mb-0">Expected Due Date *</Form.Label>
+                <Form.Label className="mb-0">Invoice Date *</Form.Label>
+              </Col>
+              <Col md={6}>
+                <Form.Control
+                  type="date"
+                  name="documentDate"
+                  value={formData.documentDate}
+                  onChange={handleChange}
+                  disabled={!isEditable || loading}
+                  required
+                />
+              </Col>
+            </Row>
+
+            <Row className="mb-3 align-items-center">
+              <Col md={3}>
+                <Form.Label className="mb-0">Due Date *</Form.Label>
               </Col>
               <Col md={6}>
                 <Form.Control
@@ -891,13 +927,13 @@ const CreateSaleModal = ({ onClose, onSuccess }) => {
         <Button variant="outline-secondary" onClick={handleRefresh} disabled={loading}>
           Reset
         </Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={loading}>
-          Save
+        <Button variant="success" onClick={handleSubmit} disabled={loading}>
+          {loading ? <Spinner size="sm" /> : "Generate Invoice & Pay"}
         </Button>
       </Modal.Footer>
     </Modal>
   );
 };
 
-export default CreateSaleModal;
+export default CreateInvoiceModal;
 
